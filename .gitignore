@@ -2,7 +2,6 @@ CSTR_tv_parameters/Output_EPExport_Slave/
 CSTR_tv_parameters/Neural_Network/Output_EPExport_Slave/
 CSTR_tv_parameters/MA27DLL/
 CSTR_tv_parameters/weather.epw
-CSTR_tv_parameters/vars.py
 CSTR_tv_parameters/muvar.npy
 CSTR_tv_parameters/model_3.json
 CSTR_tv_parameters/model_3.h5

@@ -31,7 +31,6 @@ def f_gauss(time):
         return s
     else:
         return SchedVal[-1]
-
 def f_const_gauss(time, min, max, rand = 0):
     if time % 1 == 0 or rand == 1:
         if time <= 7 or time >= 19:
@@ -51,7 +50,6 @@ def f_const(time, min, max):
         return min
     else:
         return max
-
 def f_stairs(time):
     eps = 1e-5
     if time <= 600:
@@ -62,13 +60,12 @@ def f_stairs(time):
         return np.array(SchedVal[-1]) - 0.1
     else:
         return SchedVal[-1]
-
 def simTime2Clock(simTime, days):
     return simTime/600 * float(1)/EPTimeStep - days * dayduration/600 *  float(1)/EPTimeStep
 
 for i in range(0,8):
     # Load FMU created from compile_fmu() or EnergyPlusToFMU
-    model = load_fmu(modelName+'.fmu')#, log_level=5)
+    model = load_fmu(modelName+'.fmu')
     if i == 0:
         SchedVal = []
         HeatRate = []
@@ -87,7 +84,6 @@ for i in range(0,8):
         u_blinds_W = []
         # u_AHU1_noERC = []
         # v_Tgnd = []
-
 
     # Setup simulation parameters
     index = 0

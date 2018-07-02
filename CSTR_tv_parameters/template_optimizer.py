@@ -36,13 +36,14 @@ def optimizer(model):
     """
 
     # Prediction horizon
-    n_horizon = 20 #NOTE in setup_nlp Changed from TV_P to TV_P[:,k]
+    #NOTE in setup_nlp Changed from TV_P to TV_P[:,k]
+    n_horizon = 20                            
     # Robust horizon, set to 0 for standard NMPC
     n_robust = 0
     # open_loop robust NMPC (1) or multi-stage NMPC (0). Only important if n_robust > 0
     open_loop = 0
     t_end = days*hours*minutes + daystart       # Number of minutes
-    t_step = minutes/EPTimeStep      # 10 min step
+    t_step = minutes/EPTimeStep                 # 10 min step
 
     # Choose type of state discretization (collocation or multiple-shooting)
     state_discretization = 'discrete-time'

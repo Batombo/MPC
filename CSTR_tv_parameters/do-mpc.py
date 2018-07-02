@@ -70,15 +70,7 @@ configuration_1.setup_solver()
 
 # Load FMU created from compile_fmu() or EnergyPlusToFMU
 modelName = 'Model'
-model_fmu = load_fmu(modelName+'.fmu')#, log_level=5)
-
-# days = 2
-# hours = 24
-# minutes = 60
-# seconds = 60
-# EPTimeStep = 6 #Number of timesteps per hour in EnergyPlus
-#
-# numSteps = days*hours*EPTimeStep
+model_fmu = load_fmu(modelName+'.fmu')
 
 # Load options
 opts = model_fmu.simulate_options()
@@ -92,7 +84,6 @@ model_fmu.initialize(configuration_1.simulator.t0_sim*60 ,configuration_1.optimi
 do-mpc: MPC loop
 ----------------------------
 """
-result = []
 start_time = time.time()
 while (configuration_1.simulator.t0_sim + configuration_1.simulator.t_step_simulator < configuration_1.optimizer.t_end):
     """

@@ -38,7 +38,6 @@ def simulator(model):
     --------------------------------------------------------------------------
     """
     t_step_simulator = minutes/EPTimeStep     # 10 min step
-    # t_step_simulator = float(1)/EPTimeStep
     # Choose options for the integrator
     opts = {"abstol":1e-10,"reltol":1e-10, "exact_jacobian":True, 'tf':t_step_simulator}
     # Choose integrator: for example 'cvodes' for ODEs or 'idas' for DAEs

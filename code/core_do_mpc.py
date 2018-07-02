@@ -282,9 +282,7 @@ class configuration:
         if self.optimizer.state_discretization == 'discrete-time':
             rhs_unscaled = substitute(self.model.rhs, self.model.x, self.model.x * self.model.ocp.x_scaling)/self.model.ocp.x_scaling
             rhs_unscaled = substitute(rhs_unscaled, self.model.u, self.model.u * self.model.ocp.u_scaling)
-            # rhs_fcn = Function('rhs_fcn',[self.model.x,vertcat(self.model.u,self.model.p)],[rhs_unscaled])
             rhs_fcn = Function('rhs_fcn',[self.model.x,vertcat(self.model.u,self.model.tv_p)],[rhs_unscaled])
-            # x_next = rhs_fcn(self.simulator.x0_sim,vertcat(u_mpc,p_real))
             x_next = rhs_fcn(self.simulator.x0_sim,vertcat(u_mpc,tv_p_real))
             self.simulator.xf_sim = NP.squeeze(NP.array(x_next))
         else:
@@ -309,7 +307,6 @@ class configuration:
         states = []
         u_mpc = self.optimizer.u_mpc
         tmp = NP.copy(u_mpc)
-        # tmp[0:4][tmp[0:4] <= 0.2] = 0
 
         """
         Blinds
@@ -355,8 +352,6 @@ class configuration:
             # use Neural Network to do calculate Setpoint
             length = len(self.mpc_data.mpc_states)
             # NN has been trained with vector [oldest, oldest+1,..., present-1, present]
-
-            # self.mpc_data.mpc_control values that were calculated from optimizer -> self.optimizer.u_mpc current values caluclated from optimizer
             HeatRate = NP.append(self.simulator.HeatRate[0,length-5:length], u_mpc[-2]*50)
             ZoneTemp = self.mpc_data.mpc_states[length-5:length, 0]
             OutdoorTemp = self.optimizer.tv_p_values[length-5:length+1,1,0]
@@ -378,7 +373,6 @@ class configuration:
                      v_solGlobFac_E, v_solGlobFac_N, v_solGlobFac_S, v_solGlobFac_W,
                      u_blinds_E, u_blinds_N, u_blinds_S, u_blinds_W))
             tmp[6] = converter.HeatingRate2Schedule(x_test)
-            # tmp[6] = NP.round(x_next[0], 2)
 
             HeatRate = NP.append(self.simulator.HeatRate[0,length-5:length], u_mpc[-1]*50)
             ZoneTemp = self.mpc_data.mpc_states[length-5:length, 1]
@@ -396,12 +390,12 @@ class configuration:
         model_fmu.set('u_rad_OfficesZ1', tmp[6])
         model_fmu.set('u_rad_OfficesZ2', tmp[7])
 
-
         # if simTime/60 >= 27700:
         #     bp()
 
         # do one step simulation
         res = model_fmu.do_step(current_t=simTime, step_size=secStep, new_step=True)
+
         print "tv_p_now: " + str(tv_p_real[1])
         print "Shading :" + str(model_fmu.get('u_blinds_S_val'))
         # Get the actual HeatRate from E+
@@ -411,14 +405,12 @@ class configuration:
         # compare HeatRate from Optimizer with actual HeatRate
         if  (simTime -  daystart*60)/600 > 4:
             print HeatRate.transpose()-NP.array([self.mpc_data.mpc_control[-1, -2]*50, self.mpc_data.mpc_control[-1, -1]*50])
-        # Set past HeatRate as mean of both
-        # HeatRate  = NP.mean( [ HeatRate , NP.reshape(NP.array([self.mpc_data.mpc_control[-1, -2]*50, self.mpc_data.mpc_control[-1, -1]*50]).transpose(), (2,1)) ] , axis = 1)
+        # Concatenate past HeatRate values with present ones
         self.simulator.HeatRate = NP.concatenate((self.simulator.HeatRate, HeatRate), axis = 1)
 
         # Get the new states
         states.append(model_fmu.get('Tzone_1'))
         states.append(model_fmu.get('Tzone_2'))
-
 
         states.append(model_fmu.get('t_faceout_1'))
 
@@ -464,44 +456,8 @@ class configuration:
         states.append(NP.array(x_next[33]))
         states.append(NP.array(x_next[34]))
         states.append(model_fmu.get('t_facein_8'))
-    #    def asd(as):
-            # for i in range(1,12):
-            #     li = []
-            #     lo = []
-            #     if i == 1: # Ground Zone 1
-            #         states.append(model_fmu.get('t_faceout_'+str(i)))
-            #     elif i <= 6:
-            #         lo.append(model_fmu.get('t_faceout_'+str(i)))
-            #         li.append(model_fmu.get('t_facein_'+str(i)))
-            #         states.append(lo[0])
-            #         if i != 3: # Building Elememnt 3 is inner Wall
-            #             l = 0.5*(lo[0] + li[0])
-            #             if i != 6: # Building Element 6 is roof with 3 Layers
-            #                 states.append(l)
-            #             states.append(l)
-            #         states.append(li[0])
-            #     elif i <= 9: # Numeration not consistant
-            #         lo.append(model_fmu.get('t_faceout_'+str(i+3)))
-            #         li.append(model_fmu.get('t_facein_'+str(i+3)))
-            #         states.append(lo[0])
-            #         l = 0.5*(lo[0] + li[0])
-            #         if i != 9: # Building Element 9 is roof with 3 Layers
-            #             states.append(l)
-            #         states.append(l)
-            #         states.append(li[0])
-            #     elif i == 10: # Ground Zone 2
-            #         states.append(model_fmu.get('t_faceout_'+str(7)))
-            #     else:
-            #         lo.append(model_fmu.get('t_faceout_'+str(i-3)))
-            #         li.append(model_fmu.get('t_facein_'+str(i-3)))
-            #         states.append(lo[0])
-            #         l = 0.5*(lo[0] + li[0])
-            #         states.append(l)
-            #         states.append(l)
-            #         states.append(li[0])
 
         states = NP.squeeze(states)
-
 
         if  (simTime -  daystart*60)/600 < 4:
             self.simulator.xf_sim = NP.squeeze(NP.array(x_next))
@@ -538,8 +494,6 @@ class configuration:
         param["uk_prev"] = self.optimizer.u_mpc
         step_index = int(self.simulator.t0_sim / self.simulator.t_step_simulator)
         param["TV_P"] = self.optimizer.tv_p_values[step_index]
-        # correct tv_p values? + pred horizon maybe do n_horizon simulations?
-        # Enforce the observed states as initial point for next optimization
         self.optimizer.arg['lbx'][X_offset[0,0]:X_offset[0,0]+nx] = observed_states
         self.optimizer.arg['ubx'][X_offset[0,0]:X_offset[0,0]+nx] = observed_states
         self.optimizer.arg["x0"] = self.optimizer.opt_result_step.optimal_solution

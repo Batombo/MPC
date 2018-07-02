@@ -123,7 +123,7 @@ data = NP.load('full_reg.npy')
 # u_blinds_S = shuffleMonths(data[11,:])
 # u_blinds_W = shuffleMonths(data[12,:])
 
-load = 0
+load = 1
 save = 1
 
 if load == 1:
@@ -197,13 +197,13 @@ x_train = NP.divide(x_train - x_lb, x_ub - x_lb)
 -------
 x_train
 -------
-                HeatRate(t-n+1) |...| HeatRate(t) | ZoneTemp(t-n+1) |...| ZoneTemp(t) | OutdoorTemp(t-n+1) |...| OutdoorTemp(t)
+                HeatRate(t-n+1) |...| HeatRate(t) | ZoneTemp(t-n+1) |...| ZoneTemp(t-1) | OutdoorTemp(t-n+1) |...| OutdoorTemp(t)
 sample 1            .          |...|     .       |       .        |...|     .       |         .         |...|       .
 .                   .          |...|     .       |       .        |...|     .       |         .         |...|       .
 sample n                       |...|     .       |       .        |...|     .       |         .         |...|       .
 """
 
-y_train = ZoneTemp_train[numbers-1:len(SchedVal_train)]
+y_train = ZoneTemp_train[numbers-1:len(ZoneTemp_train)]
 if load == 0:
     y_lb = NP.min(y_train,axis =0)
     y_ub = NP.max(y_train,axis =0)
@@ -215,23 +215,6 @@ NP.random.shuffle(y_train)
 
 if load == 1:
     model = load_model('NN_model')
-
-    # model_json = model.to_json()
-    # with open("model_3.json", "w") as json_file:
-    #     json_file.write(model_json)
-    # # serialize weights to HDF5
-    # model.save_weights("model_3.h5")
-    # print("Saved model to disk")
-    #
-    #
-    # json_file = open('model_3.json', 'r')
-    # loaded_model_json = json_file.read()
-    # json_file.close()
-    # loaded_model = model_from_json(loaded_model_json)
-    # # load weights into new model
-    # loaded_model.load_weights("model_3.h5")
-    # print("Loaded model from disk")
-    # model = loaded_model
 else:
     """
     ----------------------------------------
@@ -239,27 +222,18 @@ else:
     ----------------------------------------
     """
 
-    drate = 0
-    lrate = 0#2e-5
-    lrate2 = 0#2e-5
     model = Sequential()
-    model.add(Dense(units = x_train.shape[1], activation='relu',input_dim = x_train.shape[1], kernel_regularizer=regularizers.l2(lrate2)))
+    model.add(Dense(units = x_train.shape[1], activation='relu',input_dim = x_train.shape[1]))
     # model.add(Dropout(drate))
 
-    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='relu', kernel_regularizer=regularizers.l2(lrate)))
-    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='relu', kernel_regularizer=regularizers.l2(lrate)))
-    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='relu', kernel_regularizer=regularizers.l2(lrate)))
-    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='relu', kernel_regularizer=regularizers.l2(lrate)))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='relu'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='relu'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='relu'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='relu'))
     ######
     model.add(Dense(units = 1, activation='relu'))
-    # model.add(Dropout(drate))
-    #
-    # model.add(Dense(units = 1, activation='linear'))
-#8e-4
-    Adam = optimizers.Adam(lr=5e-4,decay = 0 ,beta_1=0.9, beta_2=0.999, epsilon=1e-8)
-    SGD = optimizers.SGD(lr=0.05, momentum=0.9, decay=0.1, nesterov=True)
-    RMSprop = optimizers.RMSprop(lr=0.0001, rho=0.9, epsilon=1e-8, decay=0.0)
 
+    Adam = optimizers.Adam(lr=5e-4,decay = 0 ,beta_1=0.9, beta_2=0.999, epsilon=1e-8)
     model.compile(loss='mean_squared_error', optimizer= Adam, metrics = ['mae'])
 
     """
@@ -270,22 +244,33 @@ else:
     x_train = x_train.astype('float32')
     y_train = y_train.astype('float32')
     trained = model.fit(x_train, y_train, validation_split=0.1, shuffle = False, epochs=50, batch_size=1024, verbose = 2)
-    if save == 1:
-        model.save('NN_model')
-        NP.save('lbub.npy', [x_lb, x_ub, y_lb, y_ub])
+
     P.subplot(2, 1, 1)
-    # P.plot(trained.history['val_loss'] ,'r', label = 'Val loss')
+    P.plot(trained.history['val_loss'] ,'r', label = 'Val loss')
     P.plot(trained.history['loss'], 'b', label = 'Train loss')
     P.ylabel('Loss')
     P.xlabel('epoch')
 
     P.subplot(2, 1, 2)
-    # P.plot(trained.history['val_mean_absolute_error'] ,'r', label = 'Val MAE')
+    P.plot(trained.history['val_mean_absolute_error'] ,'r', label = 'Val MAE')
     P.plot(trained.history['mean_absolute_error'], 'b', label = 'Train MAE')
     P.ylabel('MAE')
     P.xlabel('epoch')
     P.show()
 
+
+
+if save == 1:
+    model.save('NN_model')
+
+    NP.save('lbub.npy', [x_lb, x_ub, y_lb, y_ub])
+
+    model_json = model.to_json()
+    with open("model_3.json", "w") as json_file:
+        json_file.write(model_json)
+    # serialize weights to HDF5
+    model.save_weights("model_3.h5")
+    print("Saved model to disk")
 
 """
 ----------------------------------------
@@ -327,7 +312,7 @@ x_test = tmp[:]
 x_test = NP.delete(x_test, 2*numbers-1, 1)
 x_test = NP.divide(x_test - x_lb, x_ub - x_lb)
 
-y_test = ZoneTemp_test[numbers-1:len(SchedVal_test)]
+y_test = ZoneTemp_test[numbers-1:len(ZoneTemp_test)]
 y_test = NP.divide(y_test - y_lb, y_ub - y_lb)
 
 x_test = x_test.astype('float32')
@@ -339,16 +324,8 @@ classes = model.predict(x_test, batch_size=512)
 y_test = NP.multiply(y_test, y_ub-y_lb) + y_lb
 classes = NP.multiply(classes, y_ub-y_lb) + y_lb
 
-
-
-
-
-
 rmse = NP.sqrt(NP.mean(( y_test-classes)**2))
 print("RMSE: " + str(rmse))
-
-
-
 
 P.subplot(2, 1, 1)
 P.plot(y_test)
