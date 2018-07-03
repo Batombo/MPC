@@ -54,10 +54,12 @@ def simulator(model):
 
     # Choose the real value of the time-varing parameters
     def tv_p_real_now(current_time):
-        current_time = current_time/10
+        current_time = current_time/(minutes/EPTimeStep)
         tv_p_real = disturbances[0,current_time]
         for i in range(1,7):
             tv_p_real = NP.append(tv_p_real, disturbances[i,current_time])
+        tv_p_real = NP.append(tv_p_real,0)
+        tv_p_real = NP.append(tv_p_real,0)
         return tv_p_real
     """
     --------------------------------------------------------------------------
@@ -68,7 +70,7 @@ def simulator(model):
     # Choose the indices of the states to plot
     plot_states = [0]
     # Choose the indices of the controls to plot
-    plot_control = [4, 2]
+    plot_control = [4, 6]
     # Plot animation (False or True)
     plot_anim = True
     # Export to matlab (for better plotting or postprocessing)

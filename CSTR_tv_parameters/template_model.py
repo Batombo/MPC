@@ -76,8 +76,10 @@ def model():
     v_solGlobFac_W = SX.sym("v_solGlobFac_W")
     v_solGlobFac_N = SX.sym("v_solGlobFac_N")
     v_solGlobFac_E = SX.sym("v_solGlobFac_E")
+    setp_ub = SX.sym("setp_ub")
+    setp_lb = SX.sym("setp_lb")
 
-    v = vertcat(v_IG_Offices, v_Tamb, v_Tgnd, v_solGlobFac_E, v_solGlobFac_N, v_solGlobFac_S, v_solGlobFac_W)
+    v = vertcat(v_IG_Offices, v_Tamb, v_Tgnd, v_solGlobFac_E, v_solGlobFac_N, v_solGlobFac_S, v_solGlobFac_W, setp_ub, setp_lb)
 
 
     """
@@ -91,10 +93,10 @@ def model():
     Bxu = Discrete_Time_Model["Bxu"]
 
 
-    dx = mtimes(Discrete_Time_Model["A"], x) + mtimes(Discrete_Time_Model["Bu"], u) + mtimes(Discrete_Time_Model["Bv"], v)
+    dx = mtimes(Discrete_Time_Model["A"], x) + mtimes(Discrete_Time_Model["Bu"], u) + mtimes(Discrete_Time_Model["Bv"], v[0:7])
     sum = 0
     for i in range(u.shape[0]):
-        sum = sum + (mtimes(Bvu[:,:,i], v) + mtimes(Bxu[:,:,i], x)) * u[i]
+        sum = sum + (mtimes(Bvu[:,:,i], v[0:7]) + mtimes(Bxu[:,:,i], x)) * u[i]
     dx = dx + sum
     # Concatenate differential states, algebraic states, control inputs and right-hand-sides
 
@@ -144,10 +146,9 @@ def model():
     u_scaling = NP.array([1,1,1,1,1,1,1,1])
     # Other possibly nonlinear constraints in the form cons(x,u,p) <= cons_ub
     # Define the expresion of the constraint (leave it empty if not necessary)
-    cons = vertcat(x[0], x[1], -x[0], -x[1])
+    cons = vertcat(x[0]-v[-2], x[1], -(x[0]-v[-1]), -x[1])
     # Define the lower and upper bounds of the constraint (leave it empty if not necessary)
-    cons_ub = NP.array([23, 23, -21, -21])
-    # cons_lb = NP.array([18, 18])
+    cons_ub = NP.array([0, 23, 0, -21])
 
     # Activate if the nonlinear constraints should be implemented as soft constraints
     soft_constraint = 1
@@ -171,8 +172,8 @@ def model():
     # Define the cost function
     # Lagrange term
     # Mayer term
-    lterm = u_rad_OfficesZ1 + u_rad_OfficesZ2 #+ u_AHU1_noERC + u_AHU2_noERC #+ u_blinds_E + u_blinds_N + u_blinds_S + u_blinds_W #(5-u_rad_OfficesZ1)**2 + (5-u_rad_OfficesZ2)**2 + (0.7-u_blinds_S)**2 + (0.7-u_blinds_W)**2 + (0.7-u_blinds_N)**2 + (0.7-u_blinds_E)**2 + (0.1-u_AHU1_noERC)**2 + (0.1-u_AHU2_noERC)**2
-    mterm = u_rad_OfficesZ1 + u_rad_OfficesZ2 #+ u_AHU1_noERC + u_AHU2_noERC #+ u_blinds_E + u_blinds_N + u_blinds_S + u_blinds_W #(5-u_rad_OfficesZ1)**2 + (5-u_rad_OfficesZ2)**2 + (0.7-u_blinds_S)**2 + (0.7-u_blinds_W)**2 + (0.7-u_blinds_N)**2 + (0.7-u_blinds_E)**2 + (0.1-u_AHU1_noERC)**2 + (0.1-u_AHU2_noERC)**2
+    lterm = u_rad_OfficesZ1 + u_rad_OfficesZ2 + u_AHU1_noERC + u_AHU2_noERC #+ u_blinds_E + u_blinds_N + u_blinds_S + u_blinds_W #(5-u_rad_OfficesZ1)**2 + (5-u_rad_OfficesZ2)**2 + (0.7-u_blinds_S)**2 + (0.7-u_blinds_W)**2 + (0.7-u_blinds_N)**2 + (0.7-u_blinds_E)**2 + (0.1-u_AHU1_noERC)**2 + (0.1-u_AHU2_noERC)**2
+    mterm = u_rad_OfficesZ1 + u_rad_OfficesZ2 + u_AHU1_noERC + u_AHU2_noERC #+ u_blinds_E + u_blinds_N + u_blinds_S + u_blinds_W #(5-u_rad_OfficesZ1)**2 + (5-u_rad_OfficesZ2)**2 + (0.7-u_blinds_S)**2 + (0.7-u_blinds_W)**2 + (0.7-u_blinds_N)**2 + (0.7-u_blinds_E)**2 + (0.1-u_AHU1_noERC)**2 + (0.1-u_AHU2_noERC)**2
     # Penalty term for the control movements
     rterm =1e-3 * NP.array([1, 1, 1, 1, 1, 1, 1, 1])
 

@@ -92,7 +92,6 @@ while (configuration_1.simulator.t0_sim + configuration_1.simulator.t_step_simul
     ----------------------------
     """
     # Make one optimizer step (solve the NLP)
-
     configuration_1.make_step_optimizer()
 
     """

@@ -389,13 +389,16 @@ class configuration:
 
         model_fmu.set('u_rad_OfficesZ1', tmp[6])
         model_fmu.set('u_rad_OfficesZ2', tmp[7])
-
-        # if simTime/60 >= 27700:
-        #     bp()
+        if simTime/60 >= 27700:
+            bp()
 
         # do one step simulation
         res = model_fmu.do_step(current_t=simTime, step_size=secStep, new_step=True)
-
+        if u_mpc[-4] != 0:
+            ahu = NP.zeros((1,1))
+            ahu = model_fmu.get('v_vent_1')
+            diff = (ahu - u_mpc[-4])/ahu
+            print "AHU Diff: " + str(diff)
         print "tv_p_now: " + str(tv_p_real[1])
         print "Shading :" + str(model_fmu.get('u_blinds_S_val'))
         # Get the actual HeatRate from E+

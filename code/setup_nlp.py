@@ -30,6 +30,8 @@ import numpy as NP
 import core_do_mpc
 from copy import deepcopy
 import pdb
+
+from pdb import set_trace as bp
 def setup_nlp(model, optimizer):
 
     # Decode all the necessary parameters from the model and optimizer information
@@ -78,7 +80,6 @@ def setup_nlp(model, optimizer):
     nu = u.size(1)
     np = p.size(1)
     ntv_p = tv_p.size(1)
-    nz = z.size(1)
 
     # Generate, scale and initialize all the necessary functions
     # Consider as initial guess the initial conditions
@@ -88,17 +89,11 @@ def setup_nlp(model, optimizer):
 
     # Right hand side of the ODEs
     # NOTE: look scaling (appears to be fine)
-    x_init = x_init/x_scaling
-    x_ub   = x_ub/x_scaling
-    x_lb   = x_lb/x_scaling
-    #for i in (x_ub,x_lb,x_init): i /= x_scaling
+    for i in (x0,x_ub,x_lb,x_init): i /= x_scaling
     xdot = substitute(xdot,x,x*x_scaling)/x_scaling
     for i in (u_ub,u_lb,u_init): i /= u_scaling
     xdot = substitute(xdot,u,u*u_scaling)
-    if nz == 0:
-        ffcn = Function('ffcn',[x,up,tv_p],[xdot])
-    else:
-        ffcn = Function('ffcn',[x[0:nx-nz],z,up, tv_p],[xdot[0:nx-nz],xdot[nx-nz:nx]])
+    ffcn = Function('ffcn',[x,up, tv_p],[xdot])
 
     # Constraints, possibly soft
     # Epsilon for the soft constraints
@@ -107,20 +102,20 @@ def setup_nlp(model, optimizer):
     if soft_constraint:
         epsilon = SX.sym ("epsilon",cons.size1())
         cons = cons - epsilon
-        cfcn = Function('cfcn', [x,u,p,epsilon],[cons])
+        cfcn = Function('cfcn', [x,u,p,epsilon, tv_p],[cons])
     else:
-        cfcn = Function('cfcn', [x,u,p],[cons])
+        cfcn = Function('cfcn', [x,u,p, tv_p],[cons])
     cons_terminal = substitute(cons_terminal,x,x*x_scaling)
     cons_terminal = substitute(cons_terminal,u,u*u_scaling)
     cfcn_terminal = Function('cfcn',[x,u,p],[cons_terminal])
     # Mayer term of the cost functions
     mterm = substitute(mterm,x,x*x_scaling)
     mterm = substitute(mterm,u,u*u_scaling)
-    mfcn = Function('mfcn',[x,u,p],[mterm])
+    mfcn = Function('mfcn',[x,u,p, tv_p],[mterm])
     # Lagrange term of the cost function
     lterm = substitute(lterm,x,x*x_scaling)
     lterm = substitute(lterm,u,u*u_scaling)
-    lagrange_fcn = Function('lagrange_fcn',[x,u,p],[lterm])
+    lagrange_fcn = Function('lagrange_fcn',[x,u,p, tv_p],[lterm])
     # Penalty term for the control inputs
     u_prev = SX.sym("u_prev",nu)
     du = u-u_prev
@@ -172,19 +167,9 @@ def setup_nlp(model, optimizer):
 
       # Choose collocation points
       if coll=='legendre':    # Legendre collocation points
-        tau_root = (
-          [0,0.500000],
-          [0,0.211325,0.788675],
-          [0,0.112702,0.500000,0.887298],
-          [0,0.069432,0.330009,0.669991,0.930568],
-          [0,0.046910,0.230765,0.500000,0.769235,0.953090])[deg-1]
+        tau_root = [0]+collocation_points(deg, 'legendre')
       elif coll=='radau':     # Radau collocation points
-        tau_root = (
-          [0,1.000000],
-          [0,0.333333,1.000000],
-          [0,0.155051,0.644949,1.000000],
-          [0,0.088588,0.409467,0.787659,1.000000],
-          [0,0.057104,0.276843,0.583590,0.860240,1.000000])[deg-1]
+        tau_root = [0]+collocation_points(deg, 'radau')
       else:
         raise Exception('Unknown collocation scheme')
 
@@ -217,9 +202,9 @@ def setup_nlp(model, optimizer):
         lfcn = Function('lfcn',[tau],[L])
         D[j] = lfcn(1.0)
         # Evaluate the time derivative of the polynomial at all collocation points to get the coefficients of the continuity equation
-        tfcn = lfcn.tangent()
+        tfcn = Function('tfcn', [tau],[tangent(L,tau)])
         for r in range(deg+1):
-          C[j,r], _ = tfcn(tau_root[r])
+          C[j,r] = tfcn(tau_root[r])
 
       # Initial condition
       xk0 = MX.sym("xk0",nx)
@@ -227,7 +212,6 @@ def setup_nlp(model, optimizer):
       # Parameter
       pk = MX.sym("pk",np)
       tv_pk = MX.sym("tv_pk",ntv_p)
-
       # Control
       uk = MX.sym("uk",nu)
       #uk_prev = MX.sym ("uk_prev",nu)
@@ -257,11 +241,11 @@ def setup_nlp(model, optimizer):
           ik_split[i,j] = ik[offset:offset+nx]
 
           # Add the initial condition
-          ik_init[offset:offset+nx] = NP.asarray(x_init)[:,0]
+          ik_init[offset:offset+nx] = x_init
 
           # Add bounds
-          ik_lb[offset:offset+nx] = NP.asarray(x_lb)[:,0]
-          ik_ub[offset:offset+nx] = NP.asarray(x_ub)[:,0]
+          ik_lb[offset:offset+nx] = x_lb
+          ik_ub[offset:offset+nx] = x_ub
           offset += nx
 
         # All collocation points in subsequent finite elements
@@ -271,11 +255,11 @@ def setup_nlp(model, optimizer):
       xkf = ik[offset:offset+nx]
 
       # Add the initial condition
-      ik_init[offset:offset+nx] = NP.asarray(x_init)[:,0]
+      ik_init[offset:offset+nx] = x_init
 
       # Add bounds
-      ik_lb[offset:offset+nx] = NP.asarray(x_lb)[:,0]
-      ik_ub[offset:offset+nx] = NP.asarray(x_ub)[:,0]
+      ik_lb[offset:offset+nx] = x_lb
+      ik_ub[offset:offset+nx] = x_ub
       offset += nx
 
       # Check offset for consistency
@@ -298,19 +282,8 @@ def setup_nlp(model, optimizer):
             xp_ij += C[r,j]*ik_split[i,r]
 
           # Add collocation equations to the NLP
-          if nz == 0:
-              # The ODE case: a simple function call is performed
-              [f_ij] = ffcn.call([ik_split[i,j],vertcat(uk,pk), tv_pk])
-              gk.append(h*f_ij - xp_ij)
-          else:
-              # The DAE case: two calls are made and the constraint vector is updated correspondingly
-              ik_curr = ik_split[i,j];
-              ik_d = ik_curr[0:nx-nz];
-              ik_a = ik_curr[nx-nz:nx];
-              [f_ij_curr,g_ij_curr] = ffcn.call([ik_d,ik_a,vertcat(uk,pk),tv_pk])#[DAE_ODE]
-              #[g_ij_curr] = ffcn.call([ik_d,ik_a,vertcat(uk,pk)])#[DAE_ALG]
-              gk.append(h*f_ij_curr - xp_ij[0:nx-nz])
-              gk.append(g_ij_curr)
+	  [f_ij] = ffcn.call([ik_split[i,j],vertcat(uk,pk),tv_pk])
+          gk.append(h*f_ij - xp_ij)
           lbgk.append(NP.zeros(nx)) # equality constraints
           ubgk.append(NP.zeros(nx)) # equality constraints
 
@@ -332,7 +305,7 @@ def setup_nlp(model, optimizer):
       assert(gk.size()==ik.size())
 
       # Create the integrator function
-      ifcn = Function("ifcn", [ik,xk0,pk,uk,tv_pk],[gk,xkf])
+      ifcn = Function("ifcn", [ik,xk0,pk,uk, tv_pk],[gk,xkf])
     # FIXME: update so that multiple_shooting works
     elif state_discretization == 'multiple-shooting':
 
@@ -366,6 +339,7 @@ def setup_nlp(model, optimizer):
       EPSILON = NP.resize(NP.array([],dtype=MX),(cons.size1()))
       #uk_prev = MX.sym ("uk_prev",nu)
       pass
+
     # Number of branches
     n_branches = [len(p_scenario) if k<n_robust else 1 for k in range(nk)]
 
@@ -445,16 +419,16 @@ def setup_nlp(model, optimizer):
         X_offset[k,s] = offset
 
         # Add the initial condition
-        vars_init[offset:offset+nx] = NP.asarray(x_init)[:,0]
+
+        vars_init[offset:offset+nx] = NP.squeeze(x_init)
 
         if k==0:
-          vars_lb[offset:offset+nx] = NP.asarray(x0)[:,0]
-          vars_ub[offset:offset+nx] = NP.asarray(x0)[:,0]
+          vars_lb[offset:offset+nx] = NP.squeeze(x0)
+          vars_ub[offset:offset+nx] = NP.squeeze(x0)
 
         else:
-          vars_lb[offset:offset+nx] = NP.asarray(x_lb)[:,0]
-          vars_ub[offset:offset+nx] = NP.asarray(x_ub)[:,0]
-
+          vars_lb[offset:offset+nx] = NP.squeeze(x_lb)
+          vars_ub[offset:offset+nx] = NP.squeeze(x_ub)
         offset += nx
 
         # State trajectory if collocation
@@ -483,9 +457,9 @@ def setup_nlp(model, optimizer):
     for s in range(n_scenarios[nk]):
       X[nk,s] = V[offset:offset+nx]
       X_offset[nk,s] = offset
-      vars_lb[offset:offset+nx] = NP.asarray(x_lb)[:,0]
-      vars_ub[offset:offset+nx] = NP.asarray(x_ub)[:,0]
-      vars_init[offset:offset+nx] = NP.asarray(x_init)[:,0]
+      vars_lb[offset:offset+nx] = NP.squeeze(x_lb)
+      vars_ub[offset:offset+nx] = NP.squeeze(x_ub)
+      vars_init[offset:offset+nx] = NP.squeeze(x_init)
       offset += nx
     if soft_constraint:
         # Last elements (epsilon) for soft constraints
@@ -525,7 +499,6 @@ def setup_nlp(model, optimizer):
           if state_discretization=='collocation':
 
             # Call the inlined integrator
-            #pdb.set_trace()
             [g_ksb,xf_ksb] = ifcn.call([I[k,s,b],X_ks,P_ksb,U_ks, TV_P[:,k]])
 
             # Add equations defining the implicitly defined variables (i.e. collocation and continuity equations) to the NLP
@@ -540,9 +513,10 @@ def setup_nlp(model, optimizer):
             #pdb.set_trace()
             ifcn_out = ifcn(x0=X_ks,p=vertcat(U_ks,P_ksb))
             xf_ksb = ifcn_out['xf']
+
           elif state_discretization == 'discrete-time':
-              #NOTE Changed from TV_P to TV_P[:,k]
-            [xf_ksb] = ffcn.call([X_ks,vertcat(U_ks,P_ksb),TV_P[:,k]])
+            [xf_ksb] = ffcn.call([X_ks,vertcat(U_ks,P_ksb), TV_P[:,k]])
+
           # Add continuity equation to NLP
           g.append(X[k+1,child_scenario[k][s][b]] - xf_ksb)
           lbg.append(NP.zeros(nx))
@@ -551,9 +525,9 @@ def setup_nlp(model, optimizer):
           # Add extra constraints depending on other states
           #pdb.set_trace()
           if soft_constraint:
-              [residual] = cfcn.call([xf_ksb,U_ks,P_ksb, EPSILON])
+              [residual] = cfcn.call([xf_ksb,U_ks,P_ksb, EPSILON, TV_P[:,k]])
           else:
-              [residual] = cfcn.call([xf_ksb,U_ks,P_ksb])
+              [residual] = cfcn.call([xf_ksb,U_ks,P_ksb, TV_P[:,k]])
           g.append(residual)
           lbg.append(NP.ones(cons.size1())*(-inf))
           ubg.append(cons_ub)
@@ -566,9 +540,9 @@ def setup_nlp(model, optimizer):
 			  ubg.append(cons_terminal_ub)
           # Add contribution to the cost
           if k < nk - 1:
-              [J_ksb] = lagrange_fcn.call([xf_ksb,U_ks,P_ksb])
+              [J_ksb] = lagrange_fcn.call([xf_ksb,U_ks,P_ksb, TV_P[:,k]])
           else:
-              [J_ksb] = mfcn.call([xf_ksb,U_ks,P_ksb])
+              [J_ksb] = mfcn.call([xf_ksb,U_ks,P_ksb, TV_P[:,k]])
           J += omega[k]*J_ksb
 
           # Add contribution to the cost of the soft constraints penalty term

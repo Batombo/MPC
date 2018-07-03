@@ -27,6 +27,20 @@ import core_do_mpc
 from pdb import set_trace as bp
 from vars import *
 
+def createConstraints(ub_night, lb_night, ub_day, lb_day, dist_len):
+    daycount = 0
+    constraints = NP.zeros((2,dist_len))
+    for index in range (dist_len):
+        if index != 0 and index % numSteps == 0:
+            daycount += 1
+        if index - daycount*numSteps < 7*EPTimeStep or index - daycount*numSteps > 20*EPTimeStep:
+            constraints[0, index] = ub_night
+            constraints[1, index] = lb_night
+        else:
+            constraints[0, index] = ub_day
+            constraints[1, index] = lb_day
+    return constraints
+
 def optimizer(model):
 
     """
@@ -37,7 +51,7 @@ def optimizer(model):
 
     # Prediction horizon
     #NOTE in setup_nlp Changed from TV_P to TV_P[:,k]
-    n_horizon = 20                            
+    n_horizon = 20
     # Robust horizon, set to 0 for standard NMPC
     n_robust = 0
     # open_loop robust NMPC (1) or multi-stage NMPC (0). Only important if n_robust > 0
@@ -89,9 +103,12 @@ def optimizer(model):
     # The vectos for each parameter might chance at each sampling time
     number_steps = numSteps/days*364
     # Number of time-varying parameters
-    n_tv_p = 7
+    n_tv_p = 9
     tv_p_values = NP.resize(NP.array([]),(number_steps,n_tv_p,n_horizon))
     disturbances = NP.load('disturbances.npy').squeeze()
+
+    # Create a constraint vector - night constraints - day constraints
+    constraints = createConstraints(18,16,23,21, disturbances.shape[1])
     for time_step in range (number_steps):
         tv_param_1_values = disturbances[0, time_step: time_step+n_horizon]
         tv_param_2_values = disturbances[1, time_step: time_step+n_horizon]
@@ -100,7 +117,13 @@ def optimizer(model):
         tv_param_5_values = disturbances[4, time_step: time_step+n_horizon]
         tv_param_6_values = disturbances[5, time_step: time_step+n_horizon]
         tv_param_7_values = disturbances[6, time_step: time_step+n_horizon]
-        tv_p_values[time_step] = NP.array([tv_param_1_values,tv_param_2_values,tv_param_3_values,tv_param_4_values,tv_param_5_values,tv_param_6_values,tv_param_7_values])
+
+        tv_param_8_values = constraints[0, time_step: time_step+n_horizon]
+        tv_param_9_values = constraints[1, time_step: time_step+n_horizon]
+
+        tv_p_values[time_step] = NP.array([tv_param_1_values,tv_param_2_values,tv_param_3_values,
+        tv_param_4_values,tv_param_5_values,tv_param_6_values,tv_param_7_values,
+        tv_param_8_values, tv_param_9_values])
     # Parameteres of the NLP which may vary along the time (For example a set point that varies at a given time)
     """
     --------------------------------------------------------------------------
