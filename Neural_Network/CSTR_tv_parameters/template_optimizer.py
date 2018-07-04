@@ -109,6 +109,7 @@ def optimizer(model):
 
     # Create a constraint vector - night constraints - day constraints
     constraints = createConstraints(18,16,23,21, disturbances.shape[1])
+    # constraints = createConstraints(23,21,23,21, disturbances.shape[1])
     for time_step in range (number_steps):
         tv_param_1_values = disturbances[0, time_step: time_step+n_horizon]
         tv_param_2_values = disturbances[1, time_step: time_step+n_horizon]

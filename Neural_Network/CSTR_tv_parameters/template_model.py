@@ -128,7 +128,7 @@ def model():
     z0 = NP.array([])
 
     # Bounds on the states. Use "inf" for unconstrained states
-    x_lb = -10*NP.ones(36)
+    x_lb = -50*NP.ones(36)
     x_ub = 60*NP.ones(36)
     # No algebraic states
     z_lb = NP.array([])
@@ -147,15 +147,16 @@ def model():
     # Other possibly nonlinear constraints in the form cons(x,u,p) <= cons_ub
     # Define the expresion of the constraint (leave it empty if not necessary)
     cons = vertcat(x[0]-v[-2], x[1], -(x[0]-v[-1]), -x[1])
+    # cons = vertcat(x[0], x[1], -x[0], -x[1])
     # Define the lower and upper bounds of the constraint (leave it empty if not necessary)
-    cons_ub = NP.array([0, 23, 0, -21])
+    cons_ub = NP.array([0, 23, -0, -21])
 
     # Activate if the nonlinear constraints should be implemented as soft constraints
     soft_constraint = 1
     # Penalty term to add in the cost function for the constraints (it should be the same size as cons)
     penalty_term_cons = NP.array([1e5, 1e5, 1e5, 1e5])
     # Maximum violation for the constraints
-    maximum_violation = NP.array([1, 1, 1, 1])
+    maximum_violation = 100*NP.array([1, 1, 1, 1])
 
     # Define the terminal constraint (leave it empty if not necessary)
     cons_terminal = vertcat()
