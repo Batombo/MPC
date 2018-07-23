@@ -538,11 +538,11 @@ ZoneVentilation:DesignFlowRate,
   0.03636,                                !- Temperature Term Coefficient
   0.1177,                                 !- Velocity Term Coefficient
   0,                                      !- Velocity Squared Term Coefficient
-  23,                                     !- Minimum Indoor Temperature {C}
+  -20,                                     !- Minimum Indoor Temperature {C}
   ,                                       !- Minimum Indoor Temperature Schedule Name
   100,                                    !- Maximum Indoor Temperature {C}
   ,                                       !- Maximum Indoor Temperature Schedule Name
-  -10,                                      !- Delta Temperature {deltaC}
+  -50,                                      !- Delta Temperature {deltaC}
   ,                                       !- Delta Temperature Schedule Name
   -100,                                   !- Minimum Outdoor Temperature {C}
   ,                                       !- Minimum Outdoor Temperature Schedule Name
@@ -566,7 +566,7 @@ ZoneHVAC:Baseboard:RadiantConvective:Water,
   87.78,                                  !- Rated Average Water Temperature {C}
   0.063,                                  !- Rated Water Mass Flow Rate {kg/s}
   HeatingDesignCapacity,                  !- Heating Design Capacity Method
-  10000,                               !- Heating Design Capacity {W}
+  5000,                               !- Heating Design Capacity {W}
   0,                                      !- Heating Design Capacity Per Floor Area {W/m2}
   1,                                      !- Fraction of Autosized Heating Design Capacity
   AutoSize,                               !- Maximum Water Flow Rate {m3/s}
@@ -905,7 +905,7 @@ ThermostatSetpoint:DualSetpoint,
 ZoneVentilation:DesignFlowRate,
   Natural Ventilation 1,                  !- Name
   Thermal Zone 2,                         !- Zone or ZoneList Name
-  u_AHU2_noERC,        !- Schedule Name
+  Always On Discrete,        !- Schedule Name
   Flow/Zone,                              !- Design Flow Rate Calculation Method
   0.16,                                   !- Design Flow Rate {m3/s}
   0,                                      !- Flow Rate per Zone Floor Area {m3/s-m2}
@@ -918,11 +918,11 @@ ZoneVentilation:DesignFlowRate,
   0.03636,                                !- Temperature Term Coefficient
   0.1177,                                 !- Velocity Term Coefficient
   0,                                      !- Velocity Squared Term Coefficient
-  23,                                     !- Minimum Indoor Temperature {C}
-  ,                                       !- Minimum Indoor Temperature Schedule Name
+  0,                                     !- Minimum Indoor Temperature {C}
+  u_AHU2_noERC,                                       !- Minimum Indoor Temperature Schedule Name
   100,                                    !- Maximum Indoor Temperature {C}
   ,                                       !- Maximum Indoor Temperature Schedule Name
-  -10,                                      !- Delta Temperature {deltaC}
+  -50,                                      !- Delta Temperature {deltaC}
   ,                                       !- Delta Temperature Schedule Name
   -100,                                   !- Minimum Outdoor Temperature {C}
   ,                                       !- Minimum Outdoor Temperature Schedule Name
@@ -940,13 +940,13 @@ ZoneHVAC:EquipmentConnections,
 
 ZoneHVAC:Baseboard:RadiantConvective:Water,
   Zone HVAC Baseboard Rad Conv Water 1,   !- Name
-  Opening,                                !- Availability Schedule Name
+  Always On Discrete hvac_library,                                !- Availability Schedule Name
   Node 10,                                !- Inlet Node Name
   Node 11,                                !- Outlet Node Name
   87.78,                                  !- Rated Average Water Temperature {C}
   0.063,                                  !- Rated Water Mass Flow Rate {kg/s}
   HeatingDesignCapacity,                  !- Heating Design Capacity Method
-  AutoSize,                               !- Heating Design Capacity {W}
+  5000,                               !- Heating Design Capacity {W}
   0,                                      !- Heating Design Capacity Per Floor Area {W/m2}
   1,                                      !- Fraction of Autosized Heating Design Capacity
   AutoSize,                               !- Maximum Water Flow Rate {m3/s}
@@ -1524,10 +1524,10 @@ WindowProperty:ShadingControl,
   Shading Control East,                   !- Name
   ExteriorShade,                          !- Shading Type
   Window Shading,                         !- Construction with Shading Name
-  OnIfHighSolarOnWindow,                  !- Shading Control Type
-  ,                                       !- Schedule Name
-  27,                                     !- Setpoint {BasedOnField A4}
-  No,                                     !- Shading Control Is Scheduled
+  OnIfScheduleAllows,                     !- Shading Control Type
+  u_blinds_E,                    !- Schedule Name
+  ,                                       !- Setpoint {BasedOnField A4}
+  Yes,                                    !- Shading Control Is Scheduled
   No,                                     !- Glare Control Is Active
   ,                                       !- Shading Device Material Name
   ,                                       !- Type of Slat Angle Control for Blinds
@@ -1537,10 +1537,10 @@ WindowProperty:ShadingControl,
   Shading Control North,                  !- Name
   ExteriorShade,                          !- Shading Type
   Window Shading,                         !- Construction with Shading Name
-  OnIfHighSolarOnWindow,                  !- Shading Control Type
-  ,                                       !- Schedule Name
-  27,                                     !- Setpoint {BasedOnField A4}
-  No,                                     !- Shading Control Is Scheduled
+  OnIfScheduleAllows,                     !- Shading Control Type
+  u_blinds_N,                     !- Schedule Name
+  ,                                       !- Setpoint {BasedOnField A4}
+  Yes,                                    !- Shading Control Is Scheduled
   No,                                     !- Glare Control Is Active
   ,                                       !- Shading Device Material Name
   ,                                       !- Type of Slat Angle Control for Blinds
@@ -1550,10 +1550,10 @@ WindowProperty:ShadingControl,
   Shading Control South,                  !- Name
   ExteriorShade,                          !- Shading Type
   Window Shading,                         !- Construction with Shading Name
-  OnIfHighSolarOnWindow,                  !- Shading Control Type
-  ,                     				  !- Schedule Name
-  27,                                     !- Setpoint {BasedOnField A4}
-  No,                                    !- Shading Control Is Scheduled
+  OnIfScheduleAllows,                     !- Shading Control Type
+  u_blinds_S,                     !- Schedule Name
+  ,                                       !- Setpoint {BasedOnField A4}
+  Yes,                                    !- Shading Control Is Scheduled
   No,                                     !- Glare Control Is Active
   ,                                       !- Shading Device Material Name
   ,                                       !- Type of Slat Angle Control for Blinds
@@ -1563,10 +1563,10 @@ WindowProperty:ShadingControl,
   Shading Control West,                   !- Name
   ExteriorShade,                          !- Shading Type
   Window Shading,                         !- Construction with Shading Name
-  OnIfHighSolarOnWindow,                  !- Shading Control Type
-  ,                                       !- Schedule Name
-  27,                                     !- Setpoint {BasedOnField A4}
-  No,                                     !- Shading Control Is Scheduled
+  OnIfScheduleAllows,                     !- Shading Control Type
+  u_blinds_W,                     !- Schedule Name
+  ,                                       !- Setpoint {BasedOnField A4}
+  Yes,                                    !- Shading Control Is Scheduled
   No,                                     !- Glare Control Is Active
   ,                                       !- Shading Device Material Name
   ,                                       !- Type of Slat Angle Control for Blinds
@@ -13125,7 +13125,7 @@ People,
   0.056510529687726,                      !- People per Zone Floor Area {person/m2}
   ,                                       !- Zone Floor Area per Person {m2/person}
   0.3,                                    !- Fraction Radiant
-  ,                                       !- Sensible Heat Fraction
+  1,                                       !- Sensible Heat Fraction
   Office Activity 7;                      !- Activity Level Schedule Name
 
 ElectricEquipment,
@@ -13316,32 +13316,35 @@ SetpointManager:Scheduled,
 	!! Input and Output Shading Sched !!!!
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!	
 
-
-
 	ExternalInterface:FunctionalMockupUnitExport:To:Schedule,
 		u_blinds_S,      								!- Schedule Name
 		Fractional,               				!- Schedule Type Limits Names
 		u_blinds_S,                       			!- FMU Variable Name
 		0;                       					!- Initial Value	
 		
+		
 	ExternalInterface:FunctionalMockupUnitExport:To:Schedule,
 		u_blinds_W,      								!- Schedule Name
 		Fractional,               				!- Schedule Type Limits Names
 		u_blinds_W,                       			!- FMU Variable Name
 		0;                       					!- Initial Value
+		
 
 	ExternalInterface:FunctionalMockupUnitExport:To:Schedule,
 		u_blinds_N,      								!- Schedule Name
 		Fractional,               				!- Schedule Type Limits Names
 		u_blinds_N,                       			!- FMU Variable Name
 		0;                       					!- Initial Value
-
+		
+		
 	ExternalInterface:FunctionalMockupUnitExport:To:Schedule,
 		u_blinds_E,      								!- Schedule Name
 		Fractional,               				!- Schedule Type Limits Names
 		u_blinds_E,                       			!- FMU Variable Name
 		0;                       					!- Initial Value
-		
+					
+	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	
 	ExternalInterface:FunctionalMockupUnitExport:From:Variable,
 		Sub Surface 1,                !- Output:Variable Index Key Name
 		Surface Shading Device Is On Time Fraction,  !- Output:Variable Name
@@ -13441,15 +13444,49 @@ SetpointManager:Scheduled,
 	
   ExternalInterface:FunctionalMockupUnitExport:To:Schedule,
     u_AHU1_noERC,      						!- Schedule Name
-    Fractional,               				!- Schedule Type Limits Names
+    Dimensionless,               				!- Schedule Type Limits Names
     u_AHU1_noERC,                       		!- FMU Variable Name
     0;                       					!- Initial Value
 
+	
+  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
+    u_AHU1_noERC,                			!- Output:Variable Index Key Name
+    Schedule Value,  							!- Output:Variable Name
+    u_AHU1_noERC_SchedVal;                	!- FMU Variable Name	
+	
+  Output:Variable,
+	u_AHU1_noERC,
+	Schedule Value,
+	Timestep;
+	
   ExternalInterface:FunctionalMockupUnitExport:To:Schedule,
     u_AHU2_noERC,      						!- Schedule Name
-    Fractional,               				!- Schedule Type Limits Names
+    Dimensionless,               				!- Schedule Type Limits Names
     u_AHU2_noERC,                       		!- FMU Variable Name
     0;                       					!- Initial Value
+	
+	
+  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
+    Thermal Zone 1,       			!- Output:Variable Index Key Name
+    Zone Outdoor Air Wind Speed,  							!- Output:Variable Name
+    windspeed_Z1;                	!- FMU Variable Name	
+	
+  Output:Variable,
+	*,
+	Zone Outdoor Air Wind Speed,
+	Timestep;
+	
+  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
+    Thermal Zone 1,       			!- Output:Variable Index Key Name
+    Zone Ventilation Current Density Volume Flow Rate,  							!- Output:Variable Name
+    Volumeflow_Z1;                	!- FMU Variable Name	
+	
+  Output:Variable,
+	*,
+	Zone Ventilation Current Density Volume Flow Rate,
+	Timestep;
+	
+
 	
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!	
 	!!!!!!! Output Occupancy !!!!!!!!!!!!!
@@ -13457,12 +13494,12 @@ SetpointManager:Scheduled,
 	
   ExternalInterface:FunctionalMockupUnitExport:From:Variable,
     Thermal Zone 1,               							   !- Output:Variable Index Key Name
-    Zone Air Heat Balance Internal Convective Heat Gain Rate,  !- Output:Variable Name
+    Zone Total Internal Total Heating Rate,  !- Output:Variable Name
     v_IG_Offices;                 							   !- FMU Variable Name	
 	
   Output:Variable,
 	*,                                      				   !- Key Value
-	Zone Air Heat Balance Internal Convective Heat Gain Rate,  !- Variable Name
+	Zone Total Internal Total Heating Rate,  !- Variable Name
 	Timestep;                               				   !- Reporting Frequency
 	
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!	

@@ -28,7 +28,7 @@ from pdb import set_trace as bp
 from vars import *
 
 
-disturbances = NP.load('disturbances.npy').squeeze()
+disturbances = NP.load('Neural_Network\disturbances.npy').squeeze()
 
 def simulator(model):
 
@@ -60,6 +60,7 @@ def simulator(model):
             tv_p_real = NP.append(tv_p_real, disturbances[i,current_time])
         tv_p_real = NP.append(tv_p_real,0)
         tv_p_real = NP.append(tv_p_real,0)
+        tv_p_real = NP.append(tv_p_real,0)
         return tv_p_real
     """
     --------------------------------------------------------------------------
@@ -68,11 +69,11 @@ def simulator(model):
     """
 
     # Choose the indices of the states to plot
-    plot_states = [0]
+    plot_states = [0,1]
     # Choose the indices of the controls to plot
-    plot_control = [4, 6]
+    plot_control = [2,4,5]
     # Plot animation (False or True)
-    plot_anim = True
+    plot_anim = False
     # Export to matlab (for better plotting or postprocessing)
     export_to_matlab = False
     export_name = "mpc_result.mat"  # Change this name if desired

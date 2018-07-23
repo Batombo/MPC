@@ -1,0 +1,4 @@
+Train NN without ZoneTemp as Training Data = no more output feedback
+	-> see how open loop behaves
+
+investigate dropout 

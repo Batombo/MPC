@@ -3,11 +3,12 @@ from pyfmi import load_fmu
 import numpy as np
 import pylab as P
 from random import randint
+import random
 
 from tempfile import TemporaryFile
 
 modelName = 'Model'
-days = 59
+days = 365
 hours = 24
 minutes = 60
 seconds = 60
@@ -18,26 +19,29 @@ numSteps = days*hours*EPTimeStep
 timeStop = days*hours*minutes*seconds
 secStep = timeStop/numSteps
 
+u_blinds = np.load('u_blinds.npy')
+#np.save('u_blinds.npy', [u_blinds_E, u_blinds_N, u_blinds_S, u_blinds_W])
+
+# data =  np.load('full_reg.npy')
+# np.save('disturbances.npy', [data[4,0:6*24*365], data[3,0:6*24*365], data[5,0:6*24*365], data[6,0:6*24*365], data[7,0:6*24*365], data[8,0:6*24*365]])
+
+
 # Setup input function
-def f_gauss(time):
-    if time % 1 == 0:
-        # return randint(14, 25)
-        mu, sigma = 20, 3
-        s = np.round(np.random.normal(mu,sigma,1),0)
-        if s < 14:
-            s = 14
-        elif s > 25:
-            s = 25
+def f_gauss(time, rand =0):
+    if time % 1 == 0 or rand == 1:
+        mu, sigma = 20, 10
+        s = np.round(np.random.normal(mu,sigma,1),2)
         return s
     else:
-        return SchedVal[-1]
+        return u_AHU1_noERC[-1]
+
 def f_const_gauss(time, min, max, rand = 0):
     if time % 1 == 0 or rand == 1:
         if time <= 7 or time >= 19:
             mu, sigma = min, 0.75
         else:
             mu, sigma = max, 0.75
-        s = np.round(np.random.normal(mu,sigma,1),1)
+        s = np.round(np.random.normal(mu,sigma,1),2)
         if s < 14:
             s = 14
         elif s > 25:
@@ -50,20 +54,28 @@ def f_const(time, min, max):
         return min
     else:
         return max
-def f_stairs(time):
+
+def f_stairs(sched,time, min, max, stepsize, default):
     eps = 1e-5
     if time <= 600:
-        return 20
-    elif time > 600 and SchedVal[-1] < 25 and np.array(SchedVal[-1]) > np.array(SchedVal[-2]) - eps : #  time % 1 == 0 and
-        return np.array(SchedVal[-1]) + 0.1
-    elif time > 600*7 and SchedVal[-1] > 20 and np.array(SchedVal[-1]) < np.array(SchedVal[-2]) + eps : # time % 1 == 0 and
-        return np.array(SchedVal[-1]) - 0.1
+        return default
+    elif time > 600 and sched[-1] < max and np.array(sched[-1]) > np.array(sched[-2]) - eps : #  time % 1 == 0 and
+        return np.array(sched[-1]) + stepsize
+    elif time > 600*7 and sched[-1] > min and np.array(sched[-1]) < np.array(sched[-2]) + eps : # time % 1 == 0 and
+        return np.array(sched[-1]) - stepsize
     else:
-        return SchedVal[-1]
+        return sched[-1]
+
 def simTime2Clock(simTime, days):
     return simTime/600 * float(1)/EPTimeStep - days * dayduration/600 *  float(1)/EPTimeStep
 
-for i in range(0,8):
+def radiation2shading(vsol, threshold):
+    if vsol[-1] < threshold:
+        return 0
+    else:
+        return 1
+
+for i in range(0,7):
     # Load FMU created from compile_fmu() or EnergyPlusToFMU
     model = load_fmu(modelName+'.fmu')
     if i == 0:
@@ -77,13 +89,16 @@ for i in range(0,8):
         v_solGlobFac_N = []
         v_solGlobFac_S = []
         v_solGlobFac_W = []
+        v_windspeed = []
+        Volumeflow_Z1 = []
 
         u_blinds_E = []
         u_blinds_N = []
         u_blinds_S = []
         u_blinds_W = []
-        # u_AHU1_noERC = []
-        # v_Tgnd = []
+
+        u_AHU1_noERC = []
+
 
     # Setup simulation parameters
     index = 0
@@ -99,31 +114,85 @@ for i in range(0,8):
 
     model.initialize(simTime,timeStop)
     days = 0
-    # Simulate over the course of a year at timestep equal to EnergyPlus
+
     while simTime < timeStop:
         clock = simTime2Clock(sTime, days)
         if i == 0:
-            model.set('u_rad_OfficesZ1',f_const_gauss(clock,15,22,1))
+            setp = f_const(clock,20,23)
+            model.set('u_rad_OfficesZ1',setp)
+            model.set('u_AHU1_noERC', 0)
+            model.set('u_blinds_E', 0)
+            model.set('u_blinds_N', 0)
+            model.set('u_blinds_S', 0)
+            model.set('u_blinds_W', 0)
         elif i == 1:
-            model.set('u_rad_OfficesZ1',f_stairs(simTime))
+            model.set('u_rad_OfficesZ1',18)
+            model.set('u_AHU1_noERC', 1)
+            model.set('u_blinds_E', radiation2shading(v_solGlobFac_E, 50))
+            model.set('u_blinds_N', radiation2shading(v_solGlobFac_N, 50))
+            model.set('u_blinds_S', radiation2shading(v_solGlobFac_S, 50))
+            model.set('u_blinds_W', radiation2shading(v_solGlobFac_W, 50))
+        # elif i == 2:
+        #     setp = f_const(clock,18,20)
+        #     model.set('u_rad_OfficesZ1',setp)
+        #     model.set('u_AHU1_noERC', 0)
+        #     model.set('u_blinds_E', 0)
+        #     model.set('u_blinds_N', 0)
+        #     model.set('u_blinds_S', 0)
+        #     model.set('u_blinds_W', 0)
+        # elif i == 3:
+        #     model.set('u_rad_OfficesZ1',f_stairs(SchedVal, simTime, 18.1, 19.9, 0.1, 18.1))
+        #     model.set('u_AHU1_noERC', 0)
+        #     model.set('u_blinds_E', 0)
+        #     model.set('u_blinds_N', 0)
+        #     model.set('u_blinds_S', 0)
+        #     model.set('u_blinds_W', 0)
         elif i == 2:
-            model.set('u_rad_OfficesZ1',f_const(clock,17,22))
+            setp = f_const(clock,18,20)
+            model.set('u_rad_OfficesZ1',setp)
+            model.set('u_AHU1_noERC', 0.5)
+            model.set('u_blinds_E', radiation2shading(v_solGlobFac_E, 100))
+            model.set('u_blinds_N', radiation2shading(v_solGlobFac_N, 100))
+            model.set('u_blinds_S', radiation2shading(v_solGlobFac_S, 100))
+            model.set('u_blinds_W', radiation2shading(v_solGlobFac_W, 100))
         elif i == 3:
-            model.set('u_rad_OfficesZ1',f_const(clock,18,23))
+            setp = f_const(clock,16,18)
+            model.set('u_rad_OfficesZ1',setp)
+            model.set('u_AHU1_noERC', 0.7)
+            model.set('u_blinds_E', radiation2shading(v_solGlobFac_E, 250))
+            model.set('u_blinds_N', radiation2shading(v_solGlobFac_N, 250))
+            model.set('u_blinds_S', radiation2shading(v_solGlobFac_S, 250))
+            model.set('u_blinds_W', radiation2shading(v_solGlobFac_W, 250))
         elif i == 4:
-            model.set('u_rad_OfficesZ1',f_const(clock,16,21))
+            setp = f_const(clock,19,21)
+            model.set('u_rad_OfficesZ1',setp)
+            model.set('u_AHU1_noERC',random.random())
+            model.set('u_blinds_E', radiation2shading(v_solGlobFac_E, 500))
+            model.set('u_blinds_N', radiation2shading(v_solGlobFac_N, 500))
+            model.set('u_blinds_S', radiation2shading(v_solGlobFac_S, 500))
+            model.set('u_blinds_W', radiation2shading(v_solGlobFac_W, 500))
         elif i == 5:
-            model.set('u_rad_OfficesZ1',f_const_gauss(clock,15,22,1))
-        elif i == 6:
-            model.set('u_rad_OfficesZ1',f_const_gauss(clock,17,23,1))
-        else:
-            model.set('u_rad_OfficesZ1',f_const(clock,15,20))
+            model.set('u_rad_OfficesZ1',f_stairs(SchedVal, simTime, 16, 23, 0.1, 16))
+            model.set('u_AHU1_noERC',f_stairs(u_AHU1_noERC, simTime, 0, 1, 0.01, 0))
+            model.set('u_blinds_E', random.random())
+            model.set('u_blinds_N', random.random())
+            model.set('u_blinds_S', random.random())
+            model.set('u_blinds_W', random.random())
 
-        model.set('u_AHU1_noERC', 0)
+        else:
+            setp = f_const(clock,19,17)
+            model.set('u_rad_OfficesZ1',setp)
+            model.set('u_AHU1_noERC', 0)
+            model.set('u_blinds_E', f_stairs(u_blinds_E, simTime, 0, 1, 0.01, 0))
+            model.set('u_blinds_N', f_stairs(u_blinds_N, simTime, 0, 1, 0.01, 0))
+            model.set('u_blinds_S', f_stairs(u_blinds_S, simTime, 0, 1, 0.01, 0))
+            model.set('u_blinds_W', f_stairs(u_blinds_W, simTime, 0, 1, 0.01, 0))
+
+
+
 
         res = model.do_step(current_t=simTime, step_size=secStep, new_step=True)
         SchedVal.append(model.get('SchedVal_Z1'))
-        HeatRate.append(model.get('HeatRate_Z1'))
         ZoneTemp.append(model.get('Tzone_1'))
         v_Tamb.append(model.get('v_Tamb'))
         v_IG_Offices.append(model.get('v_IG_Offices'))
@@ -131,10 +200,28 @@ for i in range(0,8):
         v_solGlobFac_N.append(model.get('v_solGlobFac_N'))
         v_solGlobFac_S.append(model.get('v_solGlobFac_S'))
         v_solGlobFac_W.append(model.get('v_solGlobFac_W'))
-        u_blinds_E.append(model.get('u_blinds_E_val'))
-        u_blinds_N.append(model.get('u_blinds_N_val'))
-        u_blinds_S.append(model.get('u_blinds_S_val'))
-        u_blinds_W.append(model.get('u_blinds_W_val'))
+        u_AHU1_noERC.append(model.get('u_AHU1_noERC_SchedVal'))
+        HeatRate.append(model.get('HeatRate_Z1'))
+        v_windspeed.append(model.get('windspeed_Z1'))
+        Volumeflow_Z1.append(model.get('Volumeflow_Z1'))
+
+
+        if i == 6:
+            u_blinds_E.append(f_stairs(u_blinds_E, simTime, 0, 1, 0.01, 0))
+            u_blinds_N.append(f_stairs(u_blinds_N, simTime, 0, 1, 0.01, 0))
+            u_blinds_S.append(f_stairs(u_blinds_S, simTime, 0, 1, 0.01, 0))
+            u_blinds_W.append(f_stairs(u_blinds_W, simTime, 0, 1, 0.01, 0))
+        elif i == 5:
+            u_blinds_E.append(random.random())
+            u_blinds_N.append(random.random())
+            u_blinds_S.append(random.random())
+            u_blinds_W.append(random.random())
+        else:
+            u_blinds_E.append(model.get('u_blinds_E_val'))
+            u_blinds_N.append(model.get('u_blinds_N_val'))
+            u_blinds_S.append(model.get('u_blinds_S_val'))
+            u_blinds_W.append(model.get('u_blinds_W_val'))
+
 
         simTime += secStep
         sTime += secStep
@@ -142,22 +229,26 @@ for i in range(0,8):
         if simTime % dayduration == 0:
             days += 1
     print "index :" + str(i)
-    t = np.linspace(0.0,timeStop,numSteps)
+
+    # t = np.linspace(0.0,timeStop,numSteps)
     # fig = P.figure(1)
     # P.clf()
-    # P.plot(t/(3600*24), SchedVal)
-    # P.plot(t/(3600*24), ZoneTemp)
+    # P.subplot(3, 1, 1)
+    # P.plot(t/(3600*24), Volumeflow_Z1[i*6*24*days:])
+    #
+    # P.subplot(3, 1, 2)
+    # P.plot(t/(3600*24), ZoneTemp[i*6*24*days:])
+    # P.plot(t/(3600*24), SchedVal[i*6*24*days:])
     # P.ylabel('Temperature ' + u'\u2103')
     # P.xlabel('Time (days)')
-    # P.legend(['SchedVal','ZoneTemp'])
-    # P.show()
-    #
-    # fig = P.figure(2)
-    # P.clf()
-    # P.plot(t/(3600*24), HeatRate)
-    # P.ylabel('HeatRate ' + 'W')
+    # P.legend(['ZoneTemp', 'SchedVal'])
+    # P.subplot(3, 1, 3)
+    # P.plot(t/(3600*24), u_blinds_E[i*6*24*days:])
     # P.xlabel('Time (days)')
     # P.show()
     model = None
-np.save('2_reg.npy', [SchedVal, HeatRate, ZoneTemp, v_Tamb, v_IG_Offices, v_solGlobFac_E, v_solGlobFac_N, v_solGlobFac_S, v_solGlobFac_W, u_blinds_E, u_blinds_N, u_blinds_S, u_blinds_W])
-# np.save('disturbances.npy', [v_IG_Offices, v_Tamb, v_Tgnd, v_solGlobFac_E, v_solGlobFac_N, v_solGlobFac_S, v_solGlobFac_W])
+np.save('full_reg.npy', [SchedVal, HeatRate, u_AHU1_noERC, ZoneTemp, v_Tamb, v_IG_Offices,
+v_solGlobFac_E, v_solGlobFac_N, v_solGlobFac_S, v_solGlobFac_W,
+u_blinds_E, u_blinds_N, u_blinds_S, u_blinds_W,
+v_windspeed, Volumeflow_Z1])
+# np.save('disturbances.npy', [v_IG_Offices, v_Tamb, v_solGlobFac_E, v_solGlobFac_N, v_solGlobFac_S, v_solGlobFac_W, v_windspeed])

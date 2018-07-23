@@ -100,7 +100,7 @@ def setup_nlp(model, optimizer):
     cons = substitute(cons,x,x*x_scaling)
     cons = substitute(cons,u,u*u_scaling)
     if soft_constraint:
-        epsilon = SX.sym ("epsilon",cons.size1())
+        epsilon = MX.sym ("epsilon",cons.size1())
         cons = cons - epsilon
         cfcn = Function('cfcn', [x,u,p,epsilon, tv_p],[cons])
     else:
@@ -117,9 +117,9 @@ def setup_nlp(model, optimizer):
     lterm = substitute(lterm,u,u*u_scaling)
     lagrange_fcn = Function('lagrange_fcn',[x,u,p, tv_p],[lterm])
     # Penalty term for the control inputs
-    u_prev = SX.sym("u_prev",nu)
+    u_prev = MX.sym("u_prev",nu)
     du = u-u_prev
-    R =  diag(SX(rterm))
+    R =  diag(MX(rterm))
     rterm = substitute(rterm,x,x*x_scaling)
     rterm = substitute(rterm,u,u*u_scaling)
     rfcn = Function('rfcn',[u_prev,u],[mtimes(du.T,mtimes(R,du))])

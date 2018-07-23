@@ -100,7 +100,6 @@ def plot_mpc(configuration):
     x_scaling = configuration.model.ocp.x_scaling
     u = configuration.model.u
     u_scaling = configuration.model.ocp.u_scaling
-
     plt.ion()
     fig = plt.figure(1)
     total_subplots = len(plot_states) + len(plot_control)
@@ -203,25 +202,25 @@ def plot_animation(configuration):
         plt.clf()
         # First plot the states
         for index in range(len(plot_states)):
-        	plot = plt.subplot(total_subplots, 1, index + 1)
-        	# First plot the prediction
-        	plot_state_pred(v_opt, t0, plot_states[index], '-b', n_scenarios, n_branches, nk, child_scenario, X_offset, x_scaling, t_step)
-        	plt.plot(mpc_time[0:index_mpc], mpc_states[0:index_mpc,plot_states[index]] * x_scaling[plot_states[index]], '-k', linewidth=2.0)
-        	plt.ylabel(str(x[plot_states[index]]))
-        	plt.xlabel("Time")
-        	plt.grid()
-        	plot.yaxis.set_major_locator(MaxNLocator(4))
+            plot = plt.subplot(total_subplots, 1, index + 1)
+	        # First plot the prediction
+            plot_state_pred(v_opt, t0, plot_states[index], '-b', n_scenarios, n_branches, nk, child_scenario, X_offset, x_scaling, t_step)
+            plt.plot(mpc_time[0:index_mpc], mpc_states[0:index_mpc,plot_states[index]] * x_scaling[plot_states[index]], '-k', linewidth=2.0)
+            plt.ylabel(str(x[plot_states[index]]))
+            plt.xlabel("Time")
+            plt.grid()
+            plot.yaxis.set_major_locator(MaxNLocator(4))
 
         # Plot the control inputs
         for index in range(len(plot_control)):
-        	plot = plt.subplot(total_subplots, 1, len(plot_states) + index + 1)
+            plot = plt.subplot(total_subplots, 1, len(plot_states) + index + 1)
         	# First plot the prediction
-        	plot_control_pred(v_opt, t0, plot_control[index], '-b', n_scenarios, n_branches, nk, parent_scenario, U_offset, u_scaling, t_step, mpc_control[index_mpc-1,plot_control[index]])
-        	plt.plot(mpc_time[0:index_mpc], mpc_control[0:index_mpc,plot_control[index]] * u_scaling[plot_control[index]],'-k' ,drawstyle='steps', linewidth=2.0)
-        	plt.ylabel(str(u[plot_control[index]]))
-        	plt.xlabel("Time")
-        	plt.grid()
-        	plot.yaxis.set_major_locator(MaxNLocator(4))
+            plot_control_pred(v_opt, t0, plot_control[index], '-b', n_scenarios, n_branches, nk, parent_scenario, U_offset, u_scaling, t_step, mpc_control[index_mpc-1,plot_control[index]])
+            plt.plot(mpc_time[0:index_mpc], mpc_control[0:index_mpc,plot_control[index]] * u_scaling[plot_control[index]],'-k' ,drawstyle='steps', linewidth=2.0)
+            plt.ylabel(str(u[plot_control[index]]))
+            plt.xlabel("Time")
+            plt.grid()
+            plot.yaxis.set_major_locator(MaxNLocator(4))
         raw_input("Press Enter to continue...")
 
     else:

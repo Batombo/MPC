@@ -28,7 +28,6 @@ import data_do_mpc
 import numpy as NP
 import pdb
 import time
-import converter
 
 import pylab as P
 
@@ -231,7 +230,7 @@ class configuration:
         #NOTE: this could be passed as parameters of the optimizer class
         opts["ipopt.max_iter"] = 500
         opts["ipopt.tol"] = 1e-6
-        opts["ipopt.print_level"] = 5
+        opts["ipopt.print_level"] = 0
         # Setup the solver
         opts["print_time"] = False
         solver = nlpsol("solver", self.optimizer.nlp_solver, nlp_dict_out['nlp_fcn'], opts)
@@ -261,12 +260,20 @@ class configuration:
 
     def make_step_optimizer(self):
         arg = self.optimizer.arg
+        U_offset = self.optimizer.nlp_dict_out['U_offset']
+        # Extract the optimal control input to be applied
+        nu = len(self.optimizer.u_mpc)
+
+        step_index = int(self.simulator.t0_sim / self.simulator.t_step_simulator)
+        for i in range(U_offset.shape[0]):
+            arg['ubx'][U_offset[i][0] + 4] = self.optimizer.tv_p_values[step_index][-3,i]
+
         result = self.optimizer.solver(x0=arg['x0'], lbx=arg['lbx'], ubx=arg['ubx'], lbg=arg['lbg'], ubg=arg['ubg'], p = arg['p'])
         # Store the full solution
         self.optimizer.opt_result_step = data_do_mpc.opt_result(result)
-        # Extract the optimal control input to be applied
-        nu = len(self.optimizer.u_mpc)
-        U_offset = self.optimizer.nlp_dict_out['U_offset']
+
+        # nu = len(self.optimizer.u_mpc)
+        # U_offset = self.optimizer.nlp_dict_out['U_offset']
         v_opt = self.optimizer.opt_result_step.optimal_solution
         self.optimizer.u_mpc = NP.resize(NP.array(v_opt[U_offset[0][0]:U_offset[0][0]+nu]),(nu))
     def make_step_observer(self):
@@ -302,21 +309,31 @@ class configuration:
         self.simulator.tf_sim = self.simulator.tf_sim + self.simulator.t_step_simulator
 
     def step_simulator(self, model_fmu, simTime, secStep):
+
+        lbub = NP.load('Neural_Network\lbub.npy')
+        x_lb_NN = lbub[0]
+        x_ub_NN = lbub[1]
+        y_lb_NN = lbub[2]
+        y_ub_NN = lbub[3]
+
         secStep = secStep*60
         simTime = simTime*60
         states = []
-        u_mpc = self.optimizer.u_mpc
-        tmp = NP.copy(u_mpc)
 
+        u_mpc = self.optimizer.u_mpc
+        tv_p_real = self.simulator.tv_p_real_now(self.simulator.t0_sim)
+        rhs_unscaled = substitute(self.model.rhs, self.model.x, self.model.x * self.model.ocp.x_scaling)/self.model.ocp.x_scaling
+        rhs_unscaled = substitute(rhs_unscaled, self.model.u, self.model.u * self.model.ocp.u_scaling)
+        rhs_fcn = Function('rhs_fcn',[self.model.x,vertcat(self.model.u,self.model.tv_p)],[rhs_unscaled])
+        x_next = rhs_fcn(self.simulator.x0_sim,vertcat(u_mpc,tv_p_real))
+
+
+        print "u_mpc: " + str(u_mpc)
+        tmp = NP.copy(u_mpc)
         """
         Blinds
         """
-        # shading is in BRCM inverted to E+ i.e.
-        # BRCM: 0 -> E+ 1
-        # BRCM: 1 -> E+ 0
         tmp[0:4] = NP.round(tmp[0:4])
-        tmp[0:4] = (~tmp[0:4].astype(bool)).astype(int)
-        # set the optimal calculated inputs
         model_fmu.set('u_blinds_E', tmp[0])
         model_fmu.set('u_blinds_N', tmp[1])
         model_fmu.set('u_blinds_S', tmp[2])
@@ -325,149 +342,45 @@ class configuration:
         """
         AHU
         """
-        tmp[4] = converter.massflow2volumeflow(self.simulator.x0_sim[0], tmp[4])
-        tmp[4] = converter.volumeflow2sched(tmp[4])
-        model_fmu.set('u_AHU1_noERC', tmp[4])
+        model_fmu.set('u_AHU1_noERC', u_mpc[4])
 
-        tmp[5] = converter.massflow2volumeflow(self.simulator.x0_sim[1], tmp[5])
-        tmp[5] = converter.volumeflow2sched(tmp[5])
-        model_fmu.set('u_AHU2_noERC', tmp[5])
+        # model_fmu.set('u_AHU2_noERC', u_mpc[4])
 
         """
         Baseboard Heater
         """
-        tv_p_real = self.simulator.tv_p_real_now(self.simulator.t0_sim)
-        rhs_unscaled = substitute(self.model.rhs, self.model.x, self.model.x * self.model.ocp.x_scaling)/self.model.ocp.x_scaling
-        rhs_unscaled = substitute(rhs_unscaled, self.model.u, self.model.u * self.model.ocp.u_scaling)
-        rhs_fcn = Function('rhs_fcn',[self.model.x,vertcat(self.model.u,self.model.tv_p)],[rhs_unscaled])
-        x_next = rhs_fcn(self.simulator.x0_sim,vertcat(u_mpc,tv_p_real))
-
-        # Do 5 Simulation Steps
-        if  (simTime -  daystart*60)/600 < 4:
-            tmp[6] = x_next[0]
-            tmp[7] = x_next[1]
-        else:
-
-            # NOTE calculated heating in [W] not usable as input for Energpylus
-            # use Neural Network to do calculate Setpoint
-            length = len(self.mpc_data.mpc_states)
-            # NN has been trained with vector [oldest, oldest+1,..., present-1, present]
-            HeatRate = NP.append(self.simulator.HeatRate[0,length-5:length], u_mpc[-2]*50)
-            ZoneTemp = self.mpc_data.mpc_states[length-5:length, 0]
-            OutdoorTemp = self.optimizer.tv_p_values[length-5:length+1,1,0]
-            v_IG_Offices = self.optimizer.tv_p_values[length-5:length+1,0,0]*50
-
-            v_solGlobFac_E = self.optimizer.tv_p_values[length-5:length+1,3,0]
-            v_solGlobFac_N = self.optimizer.tv_p_values[length-5:length+1,4,0]
-            v_solGlobFac_S = self.optimizer.tv_p_values[length-5:length+1,5,0]
-            v_solGlobFac_W = self.optimizer.tv_p_values[length-5:length+1,6,0]
-
-            u_blind_past = (~NP.round(self.mpc_data.mpc_control[length-5:length,0:4]).astype(bool)).astype(int)
-            u_blinds_E = NP.append(u_blind_past[:,0], tmp[0])
-            u_blinds_N = NP.append(u_blind_past[:,1], tmp[1])
-            u_blinds_S = NP.append(u_blind_past[:,2], tmp[2])
-            u_blinds_W = NP.append(u_blind_past[:,3], tmp[3])
-
-
-            x_test = NP.concatenate((HeatRate,ZoneTemp ,OutdoorTemp, v_IG_Offices,
-                     v_solGlobFac_E, v_solGlobFac_N, v_solGlobFac_S, v_solGlobFac_W,
-                     u_blinds_E, u_blinds_N, u_blinds_S, u_blinds_W))
-            tmp[6] = converter.HeatingRate2Schedule(x_test)
-
-            HeatRate = NP.append(self.simulator.HeatRate[0,length-5:length], u_mpc[-1]*50)
-            ZoneTemp = self.mpc_data.mpc_states[length-5:length, 1]
-
-            x_test = NP.concatenate((HeatRate, ZoneTemp ,OutdoorTemp, v_IG_Offices,
-                     v_solGlobFac_E, v_solGlobFac_N, v_solGlobFac_S, v_solGlobFac_W,
-                     u_blinds_E, u_blinds_N, u_blinds_S, u_blinds_W))
-
-            tmp[7] = converter.HeatingRate2Schedule(x_test)
-            tmp[7] = NP.round(x_next[1], 2)
-
-            print "Setpoint Zone 1: " + str(tmp[6])
-            print "Setpoint Zone 2: " + str(tmp[7])
-
-        model_fmu.set('u_rad_OfficesZ1', tmp[6])
-        model_fmu.set('u_rad_OfficesZ2', tmp[7])
-        if simTime/60 >= 27700:
-            bp()
-
+        model_fmu.set('u_rad_OfficesZ1', u_mpc[-1])
+        # model_fmu.set('u_rad_OfficesZ2', u_mpc[5])
+        # model_fmu.set('u_rad_OfficesZ1', x_next[0])
+        # model_fmu.set('u_rad_OfficesZ2', x_next[0])
         # do one step simulation
+
         res = model_fmu.do_step(current_t=simTime, step_size=secStep, new_step=True)
-        if u_mpc[-4] != 0:
-            ahu = NP.zeros((1,1))
-            ahu = model_fmu.get('v_vent_1')
-            diff = (ahu - u_mpc[-4])/ahu
-            print "AHU Diff: " + str(diff)
-        print "tv_p_now: " + str(tv_p_real[1])
-        print "Shading :" + str(model_fmu.get('u_blinds_S_val'))
-        # Get the actual HeatRate from E+
-        HeatRate = NP.zeros((2,1))
-        for i in range(0, HeatRate.shape[0]):
-            HeatRate[i,:] = model_fmu.get('HeatRate_Z'+str(i+1))
-        # compare HeatRate from Optimizer with actual HeatRate
-        if  (simTime -  daystart*60)/600 > 4:
-            print HeatRate.transpose()-NP.array([self.mpc_data.mpc_control[-1, -2]*50, self.mpc_data.mpc_control[-1, -1]*50])
-        # Concatenate past HeatRate values with present ones
-        self.simulator.HeatRate = NP.concatenate((self.simulator.HeatRate, HeatRate), axis = 1)
 
         # Get the new states
         states.append(model_fmu.get('Tzone_1'))
-        states.append(model_fmu.get('Tzone_2'))
-
-        states.append(model_fmu.get('t_faceout_1'))
-
-        states.append(model_fmu.get('t_faceout_2'))
-        states.append(NP.array(x_next[4]))
-        states.append(NP.array(x_next[5]))
-        states.append(model_fmu.get('t_facein_2'))
-
-        states.append(model_fmu.get('t_faceout_3'))
-        states.append(model_fmu.get('t_facein_3'))
-
-        states.append(model_fmu.get('t_faceout_4'))
-        states.append(NP.array(x_next[10]))
-        states.append(NP.array(x_next[11]))
-        states.append(model_fmu.get('t_facein_4'))
-
-        states.append(model_fmu.get('t_faceout_5'))
-        states.append(NP.array(x_next[14]))
-        states.append(NP.array(x_next[15]))
-        states.append(model_fmu.get('t_facein_5'))
-
-        states.append(model_fmu.get('t_faceout_6'))
-        states.append(NP.array(x_next[18]))
-        states.append(model_fmu.get('t_facein_6'))
-
-        states.append(model_fmu.get('t_faceout_10'))
-        states.append(NP.array(x_next[21]))
-        states.append(NP.array(x_next[22]))
-        states.append(model_fmu.get('t_facein_10'))
-
-        states.append(model_fmu.get('t_faceout_11'))
-        states.append(NP.array(x_next[25]))
-        states.append(NP.array(x_next[26]))
-        states.append(model_fmu.get('t_facein_11'))
-
-        states.append(model_fmu.get('t_faceout_12'))
-        states.append(NP.array(x_next[29]))
-        states.append(model_fmu.get('t_facein_12'))
-
-        states.append(model_fmu.get('t_faceout_7'))
-
-        states.append(model_fmu.get('t_faceout_8'))
-        states.append(NP.array(x_next[33]))
-        states.append(NP.array(x_next[34]))
-        states.append(model_fmu.get('t_facein_8'))
-
+        states.append(model_fmu.get('HeatRate_Z1'))
+        states.append(model_fmu.get('u_blinds_E_val'))
+        states.append(model_fmu.get('u_blinds_N_val'))
+        states.append(model_fmu.get('u_blinds_S_val'))
+        states.append(model_fmu.get('u_blinds_W_val'))
+        states.append(model_fmu.get('u_AHU1_noERC_SchedVal'))
+        states.append(model_fmu.get('SchedVal_Z1'))
+        states.append(model_fmu.get('v_IG_Offices'))
+        states.append(model_fmu.get('v_Tamb'))
+        states.append(model_fmu.get('v_solGlobFac_E'))
+        states.append(model_fmu.get('v_solGlobFac_N'))
+        states.append(model_fmu.get('v_solGlobFac_S'))
+        states.append(model_fmu.get('v_solGlobFac_W'))
+        states.append(model_fmu.get('windspeed_Z1'))
         states = NP.squeeze(states)
-
-        if  (simTime -  daystart*60)/600 < 4:
-            self.simulator.xf_sim = NP.squeeze(NP.array(x_next))
-        else:
-            self.simulator.xf_sim = states
-        diff =  NP.squeeze(NP.array(x_next)) - states
-        print diff
+        # if states[1] > 0 and states[6] >=0.1:
+        #     bp()
+        # states = NP.reshape(states, (states.shape[0],1))
+        # if simTime/60 >= 98600:
+            # bp()
+        print states - x_next
+        self.simulator.xf_sim = states
         # Update the initial condition for the next iteration
         self.simulator.x0_sim = self.simulator.xf_sim
         # Correction for sizes of arrays when dimension is 1
@@ -477,6 +390,157 @@ class configuration:
         self.simulator.mpc_iteration = self.simulator.mpc_iteration + 1
         self.simulator.t0_sim = self.simulator.tf_sim
         self.simulator.tf_sim = self.simulator.tf_sim + self.simulator.t_step_simulator
+
+    def f_const(self,var):
+        if var <= 0*100:
+            return 17
+        elif var <= 1*100:
+            return 22
+        elif var <= 2*100:
+            return 23
+        elif var <= 3*100:
+            return 21
+        elif var <= 4*100:
+            return 19
+        elif var <= 5*100:
+            return 20
+        elif var <= 6*100:
+            return 22
+        elif var <= 7*100:
+            return 18
+        elif var <= 8*100:
+            return 22
+        else:
+            return 20
+
+    def f_const_ahu(self,var):
+        if var <= 0*100:
+            return 0.6
+        elif var <= 1*100:
+            return 0.1
+        elif var <= 2*100:
+            return 0.8
+        elif var <= 3*100:
+            return 0.3
+        elif var <= 4*100:
+            return 0.4
+        elif var <= 5*100:
+            return 0.7
+        elif var <= 6*100:
+            return 0
+        elif var <= 7*100:
+            return 0.5
+        elif var <= 8*100:
+            return 0.2
+        else:
+            return 0.9
+
+    def compare(self, model_fmu, simTime, secStep):
+        lbub = NP.load('Neural_Network\lbub.npy')
+        x_lb_NN = lbub[0]
+        x_ub_NN = lbub[1]
+        y_lb_NN = lbub[2]
+        y_ub_NN = lbub[3]
+        secStep = secStep*60
+        simTime = simTime*60
+        duration = 144*10
+        result_NN = NP.zeros((duration,self.model.x.shape[0]))
+        result_Ep = NP.zeros((duration,self.model.x.shape[0]))
+        sched = NP.zeros((duration,6))
+        for i in range(0,duration):
+            u_mpc = self.optimizer.u_mpc
+            u_mpc = NP.asarray(u_mpc, dtype=np.float32)
+            u_mpc[0:4] = float(self.f_const_ahu(i))
+            tv_p_real = self.simulator.tv_p_real_now(self.simulator.t0_sim)
+            rhs_unscaled = substitute(self.model.rhs, self.model.x, self.model.x * self.model.ocp.x_scaling)/self.model.ocp.x_scaling
+            rhs_unscaled = substitute(rhs_unscaled, self.model.u, self.model.u * self.model.ocp.u_scaling)
+            rhs_fcn = Function('rhs_fcn',[self.model.x,vertcat(self.model.u,self.model.tv_p)],[rhs_unscaled])
+            x_next = rhs_fcn(self.simulator.x0_sim,vertcat(u_mpc,tv_p_real))
+            self.simulator.xf_sim = NP.squeeze(NP.array(x_next))
+            self.simulator.x0_sim = self.simulator.xf_sim
+
+            self.simulator.mpc_iteration = self.simulator.mpc_iteration + 1
+            self.simulator.t0_sim = self.simulator.tf_sim
+            self.simulator.tf_sim = self.simulator.tf_sim + self.simulator.t_step_simulator
+
+
+            result_NN[i,:] = self.simulator.xf_sim
+        for i in range(0,duration):
+            states = []
+            u_mpc = self.optimizer.u_mpc
+            u_mpc = NP.asarray(u_mpc, dtype=np.float32)
+            u_mpc[0:4] = float(self.f_const_ahu(i))
+            """
+            Blinds
+            """
+            model_fmu.set('u_blinds_E', u_mpc[0])
+            model_fmu.set('u_blinds_N', u_mpc[1])
+            model_fmu.set('u_blinds_S', u_mpc[2])
+            model_fmu.set('u_blinds_W', u_mpc[3])
+
+            """
+            AHU
+            """
+            model_fmu.set('u_AHU1_noERC', u_mpc[4])
+
+            # model_fmu.set('u_AHU2_noERC', u_mpc[4])
+
+            """
+            Baseboard Heater
+            """
+            model_fmu.set('u_rad_OfficesZ1', u_mpc[5])
+            # model_fmu.set('u_rad_OfficesZ2', u_mpc[5])
+            # do one step simulation
+
+            res = model_fmu.do_step(current_t=simTime, step_size=secStep, new_step=True)
+
+            # Get the new states
+            states.append(model_fmu.get('Tzone_1'))
+            states.append(model_fmu.get('HeatRate_Z1'))
+            states.append(model_fmu.get('u_blinds_E_val'))
+            states.append(model_fmu.get('u_blinds_N_val'))
+            states.append(model_fmu.get('u_blinds_S_val'))
+            states.append(model_fmu.get('u_blinds_W_val'))
+            states.append(model_fmu.get('u_AHU1_noERC_SchedVal'))
+            states.append(model_fmu.get('SchedVal_Z1'))
+            states.append(model_fmu.get('v_IG_Offices'))
+            states.append(model_fmu.get('v_Tamb'))
+            states.append(model_fmu.get('v_solGlobFac_E'))
+            states.append(model_fmu.get('v_solGlobFac_N'))
+            states.append(model_fmu.get('v_solGlobFac_S'))
+            states.append(model_fmu.get('v_solGlobFac_W'))
+            states.append(model_fmu.get('windspeed_Z1'))
+
+            states = NP.squeeze(states)
+
+            simTime += secStep
+
+            result_Ep[i,:] = states
+            sched[i,:] = u_mpc
+
+        # bp()
+        rmse = NP.sqrt(NP.mean((result_Ep[:,0]-result_NN[:,0])**2,axis=0))
+        # NP.sqrt(NP.mean((result_Ep - result_NN)**2,axis=0))
+        bp()
+        print("RMSE: " + str(rmse))
+        NP.argmax(NP.abs(result_NN[:,0]-result_Ep[:,0]),axis=0)
+        P.subplot(3, 1, 1)
+        P.plot(result_NN[:,0], linewidth = 2.0)
+        P.plot(result_Ep[:,0], linewidth = 2.0)
+        P.plot(sched[:,-1])
+        P.ylabel('ZoneTemp')
+        P.legend(['NN','E+','Setpoint'])
+        P.subplot(3, 1, 2)
+        P.plot(result_NN[:,0] - result_Ep[:,0])
+        # P.plot(result_NN[:,8] - result_Ep[:,8])
+        P.ylabel('Difference')
+
+        P.subplot(3, 1, 3)
+        P.plot(result_NN[:,8])
+        P.plot(result_Ep[:,8])
+        P.ylabel('Difference v_IG_Offices')
+        P.show()
+
 
 
     def make_measurement(self):
@@ -497,6 +561,7 @@ class configuration:
         param["uk_prev"] = self.optimizer.u_mpc
         step_index = int(self.simulator.t0_sim / self.simulator.t_step_simulator)
         param["TV_P"] = self.optimizer.tv_p_values[step_index]
+        print "tv_p: " + str(param["TV_P"][:,:])
         self.optimizer.arg['lbx'][X_offset[0,0]:X_offset[0,0]+nx] = observed_states
         self.optimizer.arg['ubx'][X_offset[0,0]:X_offset[0,0]+nx] = observed_states
         self.optimizer.arg["x0"] = self.optimizer.opt_result_step.optimal_solution

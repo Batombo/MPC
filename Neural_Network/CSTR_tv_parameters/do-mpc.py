@@ -103,6 +103,10 @@ while (configuration_1.simulator.t0_sim + configuration_1.simulator.t_step_simul
     current_t = configuration_1.simulator.t0_sim
     tstep = configuration_1.simulator.t_step_simulator
     configuration_1.step_simulator(model_fmu, current_t, tstep)
+
+    # configuration_1.compare(model_fmu, current_t, tstep)
+
+
     # configuration_1.make_step_simulator()
     """
     ----------------------------
@@ -136,7 +140,7 @@ do-mpc: Plot the closed-loop results
 ------------------------------------------------------
 """
 elapsed_time = time.time() - start_time
-print elapsed_time
+#print elapsed_time
 data_do_mpc.plot_mpc(configuration_1)
 
 # Export to matlab if wanted
