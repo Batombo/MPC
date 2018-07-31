@@ -52,3 +52,10 @@ Otherwise transmitted heat changes with different room temperatures which then l
 In BRCM this is restricted to convective heat gain
 With the NN Zone Total Internal Total Heating Rate which also includes radiant heating
 
+
+
+
+------------------------
+			OpenStudio RKF Model
+------------------------
+Create right boundary conditions for surrounding buildings (shade etc) and right orientation 
