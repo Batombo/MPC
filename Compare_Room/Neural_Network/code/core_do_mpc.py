@@ -231,7 +231,7 @@ class configuration:
         #NOTE: this could be passed as parameters of the optimizer class
         opts["ipopt.max_iter"] = 500
         opts["ipopt.tol"] = 1e-6
-        opts["ipopt.print_level"] = 0
+        opts["ipopt.print_level"] = 5
         # Setup the solver
         opts["print_time"] = False
         solver = nlpsol("solver", self.optimizer.nlp_solver, nlp_dict_out['nlp_fcn'], opts)
@@ -357,6 +357,8 @@ class configuration:
         # model_fmu.set('u_rad_OfficesZ2', x_next[0])
         # do one step simulation
         res = model_fmu.do_step(current_t=simTime, step_size=secStep, new_step=True)
+        # bp()
+
         HeatRate = NP.zeros((1,1))
         for i in range(0, HeatRate.shape[0]):
             HeatRate[i,:] = model_fmu.get('HeatRate_Z'+str(i+1))
@@ -384,13 +386,13 @@ class configuration:
         states.append(model_fmu.get('v_solGlobFac_W'))
         states.append(model_fmu.get('windspeed_Z1'))
         states.append(model_fmu.get('Hum_amb'))
-        states.append(model_fmu.get('Hum_zone'))
+        # states.append(model_fmu.get('Hum_zone'))
         states.append(model_fmu.get('P_amb'))
         states = NP.squeeze(states)
 
         # states = NP.reshape(states, (states.shape[0],1))
-        # if simTime/60 >= 11090 and  simTime/60 <= 11200:
-        #     bp()
+        if simTime/60 >= 140100 and  simTime/60 <= 141000:
+            bp()
         # print states - x_next
         self.simulator.xf_sim = states
         # Update the initial condition for the next iteration
@@ -462,7 +464,7 @@ class configuration:
         for i in range(0,duration):
             u_mpc = self.optimizer.u_mpc
             u_mpc = NP.asarray(u_mpc, dtype=np.float32)
-            u_mpc[3] = float(self.f_const(i)) #np.round(np.random.normal(17,0.1,1),2)
+            u_mpc[2] = float(self.f_const_ahu(i)) #np.round(np.random.normal(17,0.1,1),2)
             tv_p_real = self.simulator.tv_p_real_now(self.simulator.t0_sim)
             rhs_unscaled = substitute(self.model.rhs, self.model.x, self.model.x * self.model.ocp.x_scaling)/self.model.ocp.x_scaling
             rhs_unscaled = substitute(rhs_unscaled, self.model.u, self.model.u * self.model.ocp.u_scaling)
@@ -481,7 +483,7 @@ class configuration:
             states = []
             u_mpc = self.optimizer.u_mpc
             u_mpc = NP.asarray(u_mpc, dtype=np.float32)
-            u_mpc[3] = float(self.f_const(i)) #np.round(np.random.normal(17,0.1,1),2)
+            u_mpc[2] = float(self.f_const_ahu(i)) #np.round(np.random.normal(17,0.1,1),2)
             """
             Blinds
             """
@@ -571,7 +573,7 @@ class configuration:
         param["uk_prev"] = self.optimizer.u_mpc
         step_index = int(self.simulator.t0_sim / self.simulator.t_step_simulator)
         param["TV_P"] = self.optimizer.tv_p_values[step_index]
-        # print "tv_p: " + str(param["TV_P"][:,:])
+        print "tv_p: " + str(param["TV_P"][:,:])
         self.optimizer.arg['lbx'][X_offset[0,0]:X_offset[0,0]+nx] = observed_states
         self.optimizer.arg['ubx'][X_offset[0,0]:X_offset[0,0]+nx] = observed_states
         self.optimizer.arg["x0"] = self.optimizer.opt_result_step.optimal_solution

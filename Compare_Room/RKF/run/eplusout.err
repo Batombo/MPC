@@ -1,4 +1,4 @@
-Program Version,EnergyPlus, Version 8.9.0-eba93e8e1b, YMD=2018.07.24 20:24,
+Program Version,EnergyPlus, Version 8.9.0-eba93e8e1b, YMD=2018.08.02 18:50,
    ************* Beginning Zone Sizing Calculations
    ** Warning ** ProcessScheduleInput: Schedule:Constant="ALWAYS ON DISCRETE", Blank Schedule Type Limits Name input -- will not be validated.
    ** Warning ** ProcessScheduleInput: Schedule:Constant="ALWAYS OFF DISCRETE", Blank Schedule Type Limits Name input -- will not be validated.
@@ -37,9 +37,9 @@ Program Version,EnergyPlus, Version 8.9.0-eba93e8e1b, YMD=2018.07.24 20:24,
    ** Warning ** The resource referenced by LifeCycleCost:UsePriceEscalation= "U.S. AVG  COMMERCIAL-COAL" has no energy cost. 
    **   ~~~   ** ... It is likely that the wrong resource is used. The resource should match the meter used in Utility:Tariff.
    ************* Simulation Error Summary *************
-   ************* There are 21 unused schedules in input.
-   ************* There are 37 unused week schedules in input.
-   ************* There are 91 unused day schedules in input.
+   ************* There are 23 unused schedules in input.
+   ************* There are 40 unused week schedules in input.
+   ************* There are 97 unused day schedules in input.
    ************* Use Output:Diagnostics,DisplayUnusedSchedules; to see them.
    *************
    ************* ===== Recurring Error Summary =====
@@ -61,4 +61,4 @@ Program Version,EnergyPlus, Version 8.9.0-eba93e8e1b, YMD=2018.07.24 20:24,
    *************
    ************* EnergyPlus Warmup Error Summary. During Warmup: 0 Warning; 0 Severe Errors.
    ************* EnergyPlus Sizing Error Summary. During Sizing: 6 Warning; 0 Severe Errors.
-   ************* EnergyPlus Completed Successfully-- 15 Warning; 0 Severe Errors; Elapsed Time=00hr 00min  9.16sec
+   ************* EnergyPlus Completed Successfully-- 15 Warning; 0 Severe Errors; Elapsed Time=00hr 00min  3.47sec

@@ -7,7 +7,7 @@ import random
 
 from tempfile import TemporaryFile
 
-modelName = 'RKF'
+
 days = 365
 hours = 24
 minutes = 60
@@ -77,6 +77,20 @@ def radiation2shading(vsol, threshold):
 #7
 for i in range(0,7):
     # Load FMU created from compile_fmu() or EnergyPlusToFMU
+    if i == 0:
+        modelName = 'RKF_Chemnitz'
+    elif i == 1:
+        modelName = 'RKF_Gorzow'
+    elif i == 2:
+        modelName = 'RKF_Hamburg'
+    elif i == 3:
+        modelName = 'RKF_Potsdam'
+    elif i == 4:
+        modelName = 'RKF_Poznan'
+    elif i == 5:
+        modelName = 'RKF_Slubice'
+    else:
+        modelName = 'RKF_Zielona'
     model = load_fmu(modelName+'.fmu')
     if i == 0:
         SchedVal = []
@@ -91,7 +105,7 @@ for i in range(0,7):
         v_solGlobFac_W = []
         v_windspeed = []
 
-        Hum_zone = []
+        # Hum_zone = []
         Hum_amb = []
         P_amb = []
 
@@ -180,7 +194,7 @@ for i in range(0,7):
 
 
         Hum_amb.append(model.get('Hum_amb'))
-        Hum_zone.append(model.get('Hum_zone'))
+        # Hum_zone.append(model.get('Hum_zone'))
         P_amb.append(model.get('P_amb'))
 
         if i == 6:
@@ -205,9 +219,9 @@ for i in range(0,7):
     # fig = P.figure(1)
     # P.clf()
     # P.subplot(3, 1, 1)
-    # P.plot(t/(3600*24), HeatRate_conv[i*6*24*days:])
-    # P.plot(t/(3600*24), HeatRate_rad[i*6*24*days:])
-    # P.legend('conv','rad')
+    # P.plot(t/(3600*24), v_Tamb[i*6*24*days:])
+    # P.ylabel('Temperature ' + u'\u2103')
+    # P.xlabel('Time (days)')
     # P.subplot(3, 1, 2)
     # P.plot(t/(3600*24), ZoneTemp[i*6*24*days:])
     # P.plot(t/(3600*24), SchedVal[i*6*24*days:])
@@ -222,5 +236,5 @@ for i in range(0,7):
 np.save('2_reg.npy', [SchedVal, HeatRate, u_AHU1_noERC, ZoneTemp, v_Tamb, v_IG_Offices,
 v_solGlobFac_E, v_solGlobFac_N, v_solGlobFac_S, v_solGlobFac_W,
 u_blinds_N, u_blinds_W,
-v_windspeed, Hum_amb, Hum_zone, P_amb])
+v_windspeed, Hum_amb, P_amb])
 # np.save('disturbances.npy', [v_IG_Offices, v_Tamb, v_solGlobFac_E, v_solGlobFac_N, v_solGlobFac_S, v_solGlobFac_W, v_windspeed, Hum_amb, Hum_zone, P_amb])

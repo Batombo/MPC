@@ -39,6 +39,7 @@ import data_do_mpc
 from pyfmi import load_fmu
 from pdb import set_trace as bp
 import time
+import numpy as NP
 
 
 """
@@ -140,6 +141,8 @@ do-mpc: Plot the closed-loop results
 ------------------------------------------------------
 """
 elapsed_time = time.time() - start_time
+consumedpower = NP.sum(configuration_1.simulator.HeatRate)
+print "Consumed Power: " + str(consumedpower) + " [W]"
 #print elapsed_time
 print 'Elapsed Time: ' + str(elapsed_time)
 data_do_mpc.plot_mpc(configuration_1)

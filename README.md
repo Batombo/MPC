@@ -55,7 +55,4 @@ With the NN Zone Total Internal Total Heating Rate which also includes radiant h
 
 
 
-------------------------
-			OpenStudio RKF Model
-------------------------
-Create right boundary conditions for surrounding buildings (shade etc) and right orientation 
+

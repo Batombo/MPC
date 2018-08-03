@@ -1,3 +1,4 @@
+
 Version,
   8.9;                                    !- Version Identifier
 
@@ -4488,7 +4489,6 @@ LifeCycleCost:NonrecurringCost,
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!	
 	!!! Output Out-/Inside Temperature !!!
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!	
-	
   Output:Variable,
 	*,                                    		!- Key Value
 	Zone Air Temperature,                   	!- Variable Name
@@ -4530,6 +4530,15 @@ LifeCycleCost:NonrecurringCost,
     u_AHU1_noERC,                       		!- FMU Variable Name
     0;                       					!- Initial Value
 	
+  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
+    u_AHU1_noERC,                			!- Output:Variable Index Key Name
+    Schedule Value,  							!- Output:Variable Name
+    u_AHU1_noERC_SchedVal;                	!- FMU Variable Name	
+	
+  Output:Variable,
+	u_AHU1_noERC,
+	Schedule Value,
+	Timestep;
 	
   ExternalInterface:FunctionalMockupUnitExport:From:Variable,
     Thermal Zone 1,       			!- Output:Variable Index Key Name
@@ -4554,122 +4563,6 @@ LifeCycleCost:NonrecurringCost,
 	*,                                      				   !- Key Value
 	Zone Total Internal Total Heating Rate,  !- Variable Name
 	Timestep;                               				   !- Reporting Frequency
-	
-	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!	
-	!!! Output Surface Temperatures !!!!!!
-	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!	
-	
-  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
-    Surface 101,               						 	!- Output:Variable Index Key Name
-    Surface Outside Face Temperature, 		 	!- Output:Variable Name
-    t_faceout_101;               				 	!- FMU Variable Name
-	
-  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
-    Surface 102,               						 	!- Output:Variable Index Key Name
-    Surface Outside Face Temperature, 		 	!- Output:Variable Name
-    t_faceout_102;               				 	!- FMU Variable Name
-	
-  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
-    Surface 106,               						 	!- Output:Variable Index Key Name
-    Surface Outside Face Temperature, 		 	!- Output:Variable Name
-    t_faceout_106;               				 	!- FMU Variable Name
-	
-  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
-    Surface 107,               						 	!- Output:Variable Index Key Name
-    Surface Outside Face Temperature, 		 	!- Output:Variable Name
-    t_faceout_107;               				 	!- FMU Variable Name
-	
-  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
-    Surface 108,               						 	!- Output:Variable Index Key Name
-    Surface Outside Face Temperature, 		 	!- Output:Variable Name
-    t_faceout_108;               				 	!- FMU Variable Name
-	
-  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
-    Surface 109,               						 	!- Output:Variable Index Key Name
-    Surface Outside Face Temperature, 		 	!- Output:Variable Name
-    t_faceout_109;               				 	!- FMU Variable Name
-	
-  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
-    Surface 110,               						 	!- Output:Variable Index Key Name
-    Surface Outside Face Temperature, 		 	!- Output:Variable Name
-    t_faceout_110;               				 	!- FMU Variable Name
-	
-  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
-    Surface 111,               						 	!- Output:Variable Index Key Name
-    Surface Outside Face Temperature, 		 	!- Output:Variable Name
-    t_faceout_111;               				 	!- FMU Variable Name
-	
-  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
-    Surface 116,               						 	!- Output:Variable Index Key Name
-    Surface Outside Face Temperature, 		 	!- Output:Variable Name
-    t_faceout_116;               				 	!- FMU Variable Name
-	
-  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
-    Surface 117,               						 	!- Output:Variable Index Key Name
-    Surface Outside Face Temperature, 		 	!- Output:Variable Name
-    t_faceout_117;               				 	!- FMU Variable Name
-	
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-
-  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
-    Surface 101,               						 	!- Output:Variable Index Key Name
-    Surface Inside Face Temperature, 		 	!- Output:Variable Name
-    t_facein_101;               				 	!- FMU Variable Name
-	
-  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
-    Surface 102,               						 	!- Output:Variable Index Key Name
-    Surface Inside Face Temperature, 		 	!- Output:Variable Name
-    t_facein_102;               				 	!- FMU Variable Name
-	
-  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
-    Surface 106,               						 	!- Output:Variable Index Key Name
-    Surface Inside Face Temperature, 		 	!- Output:Variable Name
-    t_facein_106;               				 	!- FMU Variable Name
-	
-  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
-    Surface 107,               						 	!- Output:Variable Index Key Name
-    Surface Inside Face Temperature, 		 	!- Output:Variable Name
-    t_facein_107;               				 	!- FMU Variable Name
-	
-  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
-    Surface 108,               						 	!- Output:Variable Index Key Name
-    Surface Inside Face Temperature, 		 	!- Output:Variable Name
-    t_facein_108;               				 	!- FMU Variable Name
-	
-  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
-    Surface 109,               						 	!- Output:Variable Index Key Name
-    Surface Inside Face Temperature, 		 	!- Output:Variable Name
-    t_facein_109;               				 	!- FMU Variable Name
-	
-  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
-    Surface 110,               						 	!- Output:Variable Index Key Name
-    Surface Inside Face Temperature, 		 	!- Output:Variable Name
-    t_facein_110;               				 	!- FMU Variable Name
-	
-  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
-    Surface 111,               						 	!- Output:Variable Index Key Name
-    Surface Inside Face Temperature, 		 	!- Output:Variable Name
-    t_facein_111;               				 	!- FMU Variable Name
-	
-  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
-    Surface 116,               						 	!- Output:Variable Index Key Name
-    Surface Inside Face Temperature, 		 	!- Output:Variable Name
-    t_facein_116;               				 	!- FMU Variable Name
-	
-  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
-    Surface 117,               						 	!- Output:Variable Index Key Name
-    Surface Inside Face Temperature, 		 	!- Output:Variable Name
-    t_facein_117;               				 	!- FMU Variable Name
-	
-  Output:Variable,
-	*,                                      	!- Key Value
-	Surface Outside Face Temperature,       	!- Variable Name
-	Timestep;                                 	!- Reporting Frequency
-
-  Output:Variable,
-	*,                                      	!- Key Value
-	Surface Inside Face Temperature,        	!- Variable Name
-	Timestep;                                 	!- Reporting Frequency
 	
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!	
 	! Input and Output Heating Schedule !!
@@ -4705,3 +4598,50 @@ LifeCycleCost:NonrecurringCost,
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	
+  Output:Variable,
+	*,                                    		!- Key Value
+	Site Outdoor Air Humidity Ratio,                   	!- Variable Name
+	Timestep;   								!- Reporting Frequency	
+
+	
+  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
+    ENVIRONMENT,              						  	!- Output:Variable Index Key Name
+    Site Outdoor Air Humidity Ratio, 	 	!- Output:Variable Name
+    Hum_amb;                 				 	!- FMU Variable Name	
+	
+		
+  Output:Variable,
+    *,                                      	!- Key Value
+	Zone Air Humidity Ratio,   	!- Variable Name
+	Timestep;                               	!- Reporting Frequency
+		
+  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
+    Thermal Zone 1,               				!- Output:Variable Index Key Name
+    Zone Air Humidity Ratio,						!- Output:Variable Name
+    Hum_zone;               					  	!- FMU Variable Name
+	
+	
+  Output:Variable,
+    *,                                      	!- Key Value
+	Site Outdoor Air Barometric Pressure,   	!- Variable Name
+	Timestep;                               	!- Reporting Frequency
+		
+  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
+    ENVIRONMENT,               				!- Output:Variable Index Key Name
+    Site Outdoor Air Barometric Pressure,						!- Output:Variable Name
+    P_amb;               					  	!- FMU Variable Name
+	
+	
+  Output:Variable,
+    *,                                      	!- Key Value
+	Zone Air Heat Balance Air Energy Storage Rate,   	!- Variable Name
+	Timestep;                               	!- Reporting Frequency
+		
+  ExternalInterface:FunctionalMockupUnitExport:From:Variable,
+    Thermal Zone 1,               	!- Output:Variable Index Key Name
+    Zone Air Heat Balance Air Energy Storage Rate,						!- Output:Variable Name
+    Zone_EnergyStorage;               					  	!- FMU Variable Name	
+	
+	
+	

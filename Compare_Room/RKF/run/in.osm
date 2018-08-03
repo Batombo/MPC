@@ -6625,7 +6625,7 @@ OS:WeatherFile,
   13.4,                                   !- Longitude {deg}
   1,                                      !- Time Zone {hr}
   49,                                     !- Elevation {m}
-  file:///C:/Users/iot_smart_buildings/AppData/Local/Temp/OpenStudioApp.i20416/resources/files/DEU_Berlin.103840_IWEC.epw, !- Url
+  file:///C:/Users/iot_smart_buildings/AppData/Local/Temp/OpenStudioApp.ZO3292/resources/files/DEU_Berlin.103840_IWEC.epw, !- Url
   9A610602;                               !- Checksum
 
 OS:SizingPeriod:DesignDay,
@@ -7380,7 +7380,7 @@ OS:ZoneVentilation:DesignFlowRate,
   0.03636,                                !- Temperature Term Coefficient
   0.1177,                                 !- Velocity Term Coefficient
   0,                                      !- Velocity Squared Term Coefficient
-  23,                                     !- Minimum Indoor Temperature {C}
+  -10,                                    !- Minimum Indoor Temperature {C}
   ,                                       !- Minimum Indoor Temperature Schedule Name
   100,                                    !- Maximum Indoor Temperature {C}
   ,                                       !- Maximum Indoor Temperature Schedule Name
@@ -7543,7 +7543,7 @@ OS:Schedule:Day,
 OS:ThermostatSetpoint:DualSetpoint,
   {23612a09-062f-467c-b228-0a5a6d4efdf8}, !- Handle
   Thermostat Setpoint Dual Setpoint 1,    !- Name
-  {09614427-a80e-4def-b3c8-4569d9820c87}, !- Heating Setpoint Temperature Schedule Name
+  {727c3a45-848c-4e90-b18b-e61dd272120e}, !- Heating Setpoint Temperature Schedule Name
   {648d244f-87dc-482b-b355-99d5f3b442ef}; !- Cooling Setpoint Temperature Schedule Name
 
 OS:RadianceParameters,
@@ -7595,13 +7595,6 @@ OS:ZoneCapacitanceMultiplier:ResearchSpecial,
   ;                                       !- Carbon Dioxide Capacity Multiplier
 
 OS:Output:Variable,
-  {f27920fe-03b5-438a-b16f-00de8aeec0c8}, !- Handle
-  Output Variable 1,                      !- Name
-  *,                                      !- Key Value
-  Zone People Convective Heating Rate,    !- Variable Name
-  Timestep;                               !- Reporting Frequency
-
-OS:Output:Variable,
   {50a2b09c-9924-4819-8d5a-9b3703b29ea0}, !- Handle
   Output Variable 3,                      !- Name
   *,                                      !- Key Value
@@ -7637,72 +7630,108 @@ OS:Output:Variable,
   Timestep;                               !- Reporting Frequency
 
 OS:Output:Variable,
-  {a8da7d83-0a31-4607-a874-5922375773dc}, !- Handle
+  {a4adf971-dd39-4a2f-9c05-f415892376de}, !- Handle
+  Output Variable 1,                      !- Name
+  *,                                      !- Key Value
+  Zone Air Humidity Ratio,                !- Variable Name
+  Hourly;                                 !- Reporting Frequency
+
+OS:Schedule:Ruleset,
+  {b8c76644-821e-4c20-b294-e30d879fa987}, !- Handle
+  Ventilation,                            !- Name
+  {c50de33e-2a31-403b-929e-8d1c42a993ef}, !- Schedule Type Limits Name
+  {36a3bd39-78ca-4842-8960-e91d0e0e75b4}; !- Default Day Schedule Name
+
+OS:Schedule:Day,
+  {36a3bd39-78ca-4842-8960-e91d0e0e75b4}, !- Handle
+  Schedule Day 2,                         !- Name
+  {c50de33e-2a31-403b-929e-8d1c42a993ef}, !- Schedule Type Limits Name
+  ,                                       !- Interpolate to Timestep
+  12,                                     !- Hour 1
+  0,                                      !- Minute 1
+  0,                                      !- Value Until Time 1
+  16,                                     !- Hour 2
+  0,                                      !- Minute 2
+  1,                                      !- Value Until Time 2
+  24,                                     !- Hour 3
+  0,                                      !- Minute 3
+  0;                                      !- Value Until Time 3
+
+OS:Schedule:Ruleset,
+  {727c3a45-848c-4e90-b18b-e61dd272120e}, !- Handle
+  Step Heating,                           !- Name
+  {94847803-faba-4331-9ace-c3e1da359c10}, !- Schedule Type Limits Name
+  {67316e1c-eb11-4468-a8c3-944e5d5971a2}; !- Default Day Schedule Name
+
+OS:Schedule:Day,
+  {67316e1c-eb11-4468-a8c3-944e5d5971a2}, !- Handle
+  Schedule Day 3,                         !- Name
+  {94847803-faba-4331-9ace-c3e1da359c10}, !- Schedule Type Limits Name
+  ,                                       !- Interpolate to Timestep
+  24,                                     !- Hour 1
+  0,                                      !- Minute 1
+  20;                                     !- Value Until Time 1
+
+OS:Output:Variable,
+  {1d832281-9af8-47c2-8d3a-0acfb75da74d}, !- Handle
   Output Variable 7,                      !- Name
-  *,                                      !- Key Value
-  Baseboard Radiant Heating Rate,         !- Variable Name
-  Timestep;                               !- Reporting Frequency
-
-OS:Output:Variable,
-  {423a9f5c-9c42-482a-a682-4bcd94020785}, !- Handle
-  Output Variable 8,                      !- Name
-  *,                                      !- Key Value
-  Baseboard Convective Heating Rate,      !- Variable Name
-  Timestep;                               !- Reporting Frequency
-
-OS:Output:Variable,
-  {8d442b42-e918-4fcf-864d-51028cb3951c}, !- Handle
-  Output Variable 9,                      !- Name
-  *,                                      !- Key Value
-  Boiler Mass Flow Rate,                  !- Variable Name
-  Timestep;                               !- Reporting Frequency
-
-OS:Output:Variable,
-  {6598ec65-e47f-4025-99ba-247d031f1d51}, !- Handle
-  Output Variable 10,                     !- Name
   Surface 116,                            !- Key Value
   Surface Outside Face Incident Solar Radiation Rate per Area, !- Variable Name
   timestep;                               !- Reporting Frequency
 
 OS:Output:Variable,
-  {f16cbbb5-abc1-4ccb-862d-c1dc73f04a8e}, !- Handle
-  Output Variable 11,                     !- Name
+  {1944a71f-6d3b-49ac-b5e0-25a0fb134b0e}, !- Handle
+  Output Variable 8,                      !- Name
   Surface 110,                            !- Key Value
   Surface Outside Face Incident Solar Radiation Rate per Area, !- Variable Name
   timestep;                               !- Reporting Frequency
 
 OS:Output:Variable,
-  {47a990b3-5dc7-479e-84ee-8f0ae1b5fe31}, !- Handle
-  Output Variable 12,                     !- Name
+  {5ae28656-ee4d-467b-99ac-03e2ebed27c4}, !- Handle
+  Output Variable 9,                      !- Name
   Surface 102,                            !- Key Value
   Surface Outside Face Incident Solar Radiation Rate per Area, !- Variable Name
   timestep;                               !- Reporting Frequency
 
 OS:Output:Variable,
-  {ebc4fc8e-74ce-4a9e-a20f-0ee00cd129d8}, !- Handle
-  Output Variable 13,                     !- Name
+  {b8b22c23-5f68-4e7c-900b-506067361011}, !- Handle
+  Output Variable 10,                     !- Name
   Surface 106,                            !- Key Value
   Surface Outside Face Incident Solar Radiation Rate per Area, !- Variable Name
   timestep;                               !- Reporting Frequency
 
 OS:Output:Variable,
-  {7bb4f8ad-064d-4075-87c7-b7c064d7171f}, !- Handle
-  Output Variable 14,                     !- Name
+  {d79c6afe-6e4d-4dcd-bc1e-2727b7028ed2}, !- Handle
+  Output Variable 11,                     !- Name
   Surface 101,                            !- Key Value
   Surface Inside Face Temperature,        !- Variable Name
   timestep;                               !- Reporting Frequency
 
 OS:Output:Variable,
-  {d6575e71-7e8b-4bd9-b54e-115c1f61ffad}, !- Handle
-  Output Variable 15,                     !- Name
+  {5958ec20-215e-455c-827a-9925fe7ee2e8}, !- Handle
+  Output Variable 12,                     !- Name
   Sub Surface 17,                         !- Key Value
   Surface Shading Device Is On Time Fraction, !- Variable Name
   timestep;                               !- Reporting Frequency
 
 OS:Output:Variable,
-  {5d58eaf5-0cfd-4573-8170-c35786e609fc}, !- Handle
-  Output Variable 16,                     !- Name
+  {57aa14e2-327c-4133-af2d-16611aad3091}, !- Handle
+  Output Variable 13,                     !- Name
   Sub Surface 20,                         !- Key Value
   Surface Shading Device Is On Time Fraction, !- Variable Name
+  timestep;                               !- Reporting Frequency
+
+OS:Output:Variable,
+  {caaa3de0-e589-4b67-97c6-0ec685133091}, !- Handle
+  Output Variable 14,                     !- Name
+  *,                                      !- Key Value
+  Site Outdoor Air Humidity Ratio,        !- Variable Name
+  timestep;                               !- Reporting Frequency
+
+OS:Output:Variable,
+  {b107ceab-dc53-4232-b5f3-f8ed8c275664}, !- Handle
+  Output Variable 15,                     !- Name
+  *,                                      !- Key Value
+  Site Outdoor Air Relative Humidity,     !- Variable Name
   timestep;                               !- Reporting Frequency
 

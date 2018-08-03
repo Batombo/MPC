@@ -59,7 +59,7 @@ def model():
 
     alpha   = MX.sym("alpha")
     # Define the differential states as CasADi symbols
-    features = 15
+    features = 14
     numbers = 2 - 1
     x = MX.sym("x", features*numbers)
 
@@ -72,9 +72,7 @@ def model():
     u_blinds_N = MX.sym("u_blinds_N")
     u_blinds_W = MX.sym("u_blinds_W")
 
-    epsilon = MX.sym("epsilon")
-
-    u = vertcat(u_blinds_N, u_blinds_W, u_AHU1_noERC, u_rad_OfficesZ1, epsilon)
+    u = vertcat(u_blinds_N, u_blinds_W, u_AHU1_noERC, u_rad_OfficesZ1)
     # Define time-varying parameters that can chance at each step of the prediction and at each sampling time of the MPC controller. For example, future weather predictions
     v_IG_Offices = MX.sym("V_IG_Offices")
     v_Tamb = MX.sym("v_Tamb")
@@ -84,7 +82,6 @@ def model():
     v_solGlobFac_E = MX.sym("v_solGlobFac_E")
     v_windspeed = MX.sym("v_windspeed")
     v_Hum_amb = MX.sym("v_Hum_amb")
-    v_Hum_zone = MX.sym("v_Hum_zone")
     v_P_amb = MX.sym("v_P_amb")
 
 
@@ -92,7 +89,7 @@ def model():
     setp_ub = MX.sym("setp_ub")
     setp_lb = MX.sym("setp_lb")
 
-    v = vertcat(v_IG_Offices, v_Tamb, v_solGlobFac_E, v_solGlobFac_N, v_solGlobFac_S, v_solGlobFac_W, v_windspeed, v_Hum_amb, v_Hum_zone, v_P_amb, u_ahu_ub ,setp_ub, setp_lb)
+    v = vertcat(v_IG_Offices, v_Tamb, v_solGlobFac_E, v_solGlobFac_N, v_solGlobFac_S, v_solGlobFac_W, v_windspeed, v_Hum_amb, v_P_amb, u_ahu_ub ,setp_ub, setp_lb)
 
 
     """
@@ -100,7 +97,7 @@ def model():
     template_model: define algebraic and differential equations
     --------------------------------------------------------------------------
     """
-    input = vertcat(x,u[0:4],v[0:10])
+    input = vertcat(x,u,v[0:9])
     input = NP.divide(input - x_lb_NN, x_ub_NN - x_lb_NN)#(input - x_lb_NN)*float(1)/(x_ub_NN - x_lb_NN)
     a1 = input
     a1 = vertcat(1,a1)
@@ -128,7 +125,7 @@ def model():
 
     dx0 = NP.multiply(a6[0], y_ub_NN[0]-y_lb_NN[0]) + y_lb_NN[0]#dx*(y_ub_NN-y_lb_NN) + y_lb_NN
     dx1 = NP.multiply(a6[1], y_ub_NN[1]-y_lb_NN[1]) + y_lb_NN[1]
-    dx = vertcat(dx0, u[0:4],v[0:10])
+    dx = vertcat(dx0, u,v[0:9])
     # Concatenate differential states, algebraic states, control inputs and right-hand-sides
     _x = x
 
@@ -152,39 +149,42 @@ def model():
     --------------------------------------------------------------------------
     """
     # Initial condition for the states
-    x0 = NP.array([18,0,0,0,18,226,5,0,0,0,0,2,0.005,0.005,100100])
+    x0 = NP.array([18,0,0,0,18,226,5,0,0,0,0,2,0.005,100100])
     # No algebraic states
     z0 = NP.array([])
     # Bounds on the states. Use "inf" for unconstrained states
     x_lb = x_lb_NN[0:features*numbers] - 1e-2 # -20000* NP.ones(features*numbers)#
     x_ub = x_ub_NN[0:features*numbers] + 1e-2 # 20000* NP.ones(features*numbers)#
 
+    x_lb[-1] = 0
+    x_ub[-1] = inf
+
     # No algebraic states
     z_lb = NP.array([])
     z_ub = NP.array([])
 
     # Bounds on the control inputs. Use "inf" for unconstrained inputs
-    u_lb = NP.array([0, 0, 0, 16, 0])
-    u_ub = NP.array([1, 1, 1, 23, inf])
-    u0 = NP.array([0, 0, 0, 18, 0])
+    u_lb = NP.array([0, 0, 0, 16])
+    u_ub = NP.array([1, 1, 1, 23])
+    u0 = NP.array([0, 0, 0, 18])
     # Scaling factors for the states and control inputs. Important if the system is ill-conditioned
     x_scaling = NP.ones(features*numbers)
     z_scaling = NP.array([])
-    u_scaling = NP.array([1,1,1,1,1])
+    u_scaling = NP.array([1,1,1,1])
     # Other possibly nonlinear constraints in the form cons(x,u,p) <= cons_ub
     # Define the expresion of the constraint (leave it empty if not necessary)
     # cons = vertcat(x[features*(numbers-1)]-v[-2], -(x[features*(numbers-1)]-v[-1]))
-    cons = vertcat(x[0]-v[-2]-epsilon, -(x[0]-v[-1]+epsilon))
+    cons = vertcat(x[0]-v[-2], -(x[0]-v[-1]))
     # cons = vertcat(x[0], -x[0])
     # Define the lower and upper bounds of the constraint (leave it empty if not necessary)
     cons_ub = NP.array([0, -0])
 
     # Activate if the nonlinear constraints should be implemented as soft constraints
-    soft_constraint = 0
+    soft_constraint = 1
     # Penalty term to add in the cost function for the constraints (it should be the same size as cons)
     penalty_term_cons = NP.array([1e5, 1e5])
     # Maximum violation for the constraints
-    maximum_violation = 0*NP.array([1, 1])
+    maximum_violation = 20*NP.array([1, 1])
 
     # Define the terminal constraint (leave it empty if not necessary)
     cons_terminal = vertcat()
@@ -201,10 +201,10 @@ def model():
     # Define the cost function
     # Lagrange term
     # Mayer term
-    lterm =  1*dx1 + 5*u_rad_OfficesZ1 + 5e3*epsilon
-    mterm =  1*dx1 + 5*u_rad_OfficesZ1 + 5e3*epsilon
+    lterm =  3*dx1 + 10*u_rad_OfficesZ1
+    mterm =  3*dx1 + 10*u_rad_OfficesZ1
     # Penalty term for the control movements 1e4, 100
-    rterm = 1* NP.array([5e1, 5e1, 1e4, 20, 1])
+    rterm = 1* NP.array([5e1, 5e1, 1e4, 20])
     """
     --------------------------------------------------------------------------
     template_model: pass information (not necessary to edit)

@@ -1,4 +1,4 @@
-Program Version,EnergyPlus, Version 8.9.0-eba93e8e1b, YMD=2018.07.24 20:24
+Program Version,EnergyPlus, Version 8.9.0-eba93e8e1b, YMD=2018.08.02 18:50
 ! <Version>, Version ID
  Version, 8.9
 ! <Timesteps per Hour>, #TimeSteps, Minutes per TimeStep {minutes}
@@ -72,7 +72,7 @@ Shadowing/Sun Position Calculations Annual Simulations,AverageOverDaysInFrequenc
 ! <ZoneInfiltration Airflow Stats Nominal>,Name,Schedule Name,Zone Name, Zone Floor Area {m2}, # Zone Occupants,Design Volume Flow Rate {m3/s},Volume Flow Rate/Floor Area {m3/s/m2},Volume Flow Rate/Exterior Surface Area {m3/s/m2},ACH - Air Changes per Hour,Equation A - Constant Term Coefficient {},Equation B - Temperature Term Coefficient {1/C},Equation C - Velocity Term Coefficient {s/m}, Equation D - Velocity Squared Term Coefficient {s2/m2}
  ZoneInfiltration Airflow Stats Nominal, THERMAL ZONE 1 189.1-2009 - OFFICE - OPENOFFICE - CZ4-8 INFILTRATION,OFFICE INFIL QUARTER ON,THERMAL ZONE 1,63.15,3.6,4.384E-002,6.942E-004,2.266E-004,0.625,1.000,0.000,0.000,0.000
 ! <ZoneVentilation Airflow Stats Nominal>,Name,Schedule Name,Zone Name, Zone Floor Area {m2}, # Zone Occupants,Design Volume Flow Rate {m3/s},Volume Flow Rate/Floor Area {m3/s/m2},Volume Flow Rate/person Area {m3/s/person},ACH - Air Changes per Hour,Fan Type {Exhaust;Intake;Natural},Fan Pressure Rise {Pa},Fan Efficiency {},Equation A - Constant Term Coefficient {},Equation B - Temperature Term Coefficient {1/C},Equation C - Velocity Term Coefficient {s/m}, Equation D - Velocity Squared Term Coefficient {s2/m2},Minimum Indoor Temperature{C}/Schedule,Maximum Indoor Temperature{C}/Schedule,Delta Temperature{C}/Schedule,Minimum Outdoor Temperature{C}/Schedule,Maximum Outdoor Temperature{C}/Schedule,Maximum WindSpeed{m/s}
- ZoneVentilation Airflow Stats Nominal, NATURAL VENTILATION,ALWAYS ON DISCRETE HVAC_LIBRARY,THERMAL ZONE 1,63.15,3.6,0.160,2.534E-003,4.484E-002,2.280,Natural,0.000,1.0,0.606,3.636E-002,0.118,0.000,23.00,100.00,-50.00,-100.00,100.00,40.00
+ ZoneVentilation Airflow Stats Nominal, NATURAL VENTILATION,ALWAYS ON DISCRETE HVAC_LIBRARY,THERMAL ZONE 1,63.15,3.6,0.160,2.534E-003,4.484E-002,2.280,Natural,0.000,1.0,0.606,3.636E-002,0.118,0.000,-10.00,100.00,-50.00,-100.00,100.00,40.00
 ! <AirFlow Model>, Simple
  AirFlow Model, Simple
 ! <RoomAir Model>, Zone Name, Mixing/Mundt/UCSDDV/UCSDCV/UCSDUFI/UCSDUFE/User Defined
@@ -91,7 +91,7 @@ Zone Volume Capacitance Multiplier,   1.000 ,   1.000,   1.000,   1.000
  Cooling Sizing Factor Information, Zone THERMAL ZONE 1,   1.1500    
 ! <Zone Sizing Information>, Zone Name, Load Type, Calc Des Load {W}, User Des Load {W}, Calc Des Air Flow Rate {m3/s}, User Des Air Flow Rate {m3/s}, Design Day Name, Date/Time of Peak, Temperature at Peak {C}, Humidity Ratio at Peak {kgWater/kgDryAir}, Floor Area {m2}, # Occupants, Calc Outdoor Air Flow Rate {m3/s}, Calc DOAS Heat Addition Rate {W}
  Zone Sizing Information, THERMAL ZONE 1, Cooling, 0.00000, 0.00000, 0.00000, 3.36836E-002, BERLIN ANN CLG .4% CONDNS DB=>MWB, , 30.00000, 9.18957E-003, 63.14877, 3.56857, 3.36836E-002, 0.00000
- Zone Sizing Information, THERMAL ZONE 1, Heating, 4641.13156, 5801.41445, 0.20007, 0.25009, BERLIN ANN HTG 99.6% CONDNS DB, 2/21 24:00:00, -11.80000, 1.36920E-003, 63.14877, 3.56857, 3.36836E-002, 0.00000
+ Zone Sizing Information, THERMAL ZONE 1, Heating, 17811.31795, 22264.14744, 0.72942, 0.91177, BERLIN ANN HTG 99.6% CONDNS DB, 2/21 24:00:00, -11.80000, 1.36920E-003, 63.14877, 3.56857, 3.36836E-002, 0.00000
 ! <Component Sizing Information>, Component Type, Component Name, Input Field Description, Value
  Component Sizing Information, ZoneHVAC:Baseboard:RadiantConvective:Water, ZONE HVAC BASEBOARD RAD CONV WATER, Design Size Maximum Water Flow Rate [m3/s], 1.08624E-004
  Component Sizing Information, ZoneHVAC:Baseboard:RadiantConvective:Water, ZONE HVAC BASEBOARD RAD CONV WATER, U-Factor times Area [W/C], 96.01948
@@ -121,41 +121,41 @@ Environment:Daylight Saving,No,SizingPeriod:DesignDay
 Environment:Design Day Data,22.10,9.20,DefaultMultipliers,100738,150,3.7,0.00,No,No
 Environment:Design Day Misc,202,1084.4,0.2082,0.1365,1.0,-6.23,20.6,ASHRAETau
 Environment:WarmupDays,  6
- Warmup Convergence Information,THERMAL ZONE 1,SizingPeriod: BERLIN ANN CLG .4% CONDNS DP=>MDB,0.1458592769,0.1214715334,Pass,Pass,0.0000000000,0.0000000000,Pass,Pass
+ Warmup Convergence Information,THERMAL ZONE 1,SizingPeriod: BERLIN ANN CLG .4% CONDNS DP=>MDB,8.8193331887E-002,7.7995190798E-002,Pass,Pass,1.7722194127E-002,7.9401479053E-002,Pass,Pass
 Environment,BERLIN ANN CLG .4% CONDNS ENTH=>MDB,SizingPeriod:DesignDay,07/21,07/21,SummerDesignDay,1,N/A,N/A,N/A,N/A,N/A,N/A
 Environment:Daylight Saving,No,SizingPeriod:DesignDay
 Environment:Design Day Data,27.00,9.20,DefaultMultipliers,100738,150,3.7,0.00,No,No
 Environment:Design Day Misc,202,1084.4,0.2082,0.1365,1.0,-6.23,20.6,ASHRAETau
 Environment:WarmupDays,  6
- Warmup Convergence Information,THERMAL ZONE 1,SizingPeriod: BERLIN ANN CLG .4% CONDNS ENTH=>MDB,0.1281837948,8.5115009835E-002,Pass,Pass,0.0000000000,0.0000000000,Pass,Pass
+ Warmup Convergence Information,THERMAL ZONE 1,SizingPeriod: BERLIN ANN CLG .4% CONDNS ENTH=>MDB,0.1032057613,7.8499223004E-002,Pass,Pass,0.0000000000,0.0000000000,Pass,Pass
 Environment,BERLIN ANN CLG .4% CONDNS WB=>MDB,SizingPeriod:DesignDay,07/21,07/21,SummerDesignDay,1,N/A,N/A,N/A,N/A,N/A,N/A
 Environment:Daylight Saving,No,SizingPeriod:DesignDay
 Environment:Design Day Data,26.90,9.20,DefaultMultipliers,100738,150,3.7,0.00,No,No
 Environment:Design Day Misc,202,1084.4,0.2082,0.1365,1.0,-6.23,20.6,ASHRAETau
 Environment:WarmupDays,  6
- Warmup Convergence Information,THERMAL ZONE 1,SizingPeriod: BERLIN ANN CLG .4% CONDNS WB=>MDB,0.1290279234,8.1260880248E-002,Pass,Pass,0.0000000000,0.0000000000,Pass,Pass
+ Warmup Convergence Information,THERMAL ZONE 1,SizingPeriod: BERLIN ANN CLG .4% CONDNS WB=>MDB,0.1031986781,7.8566742384E-002,Pass,Pass,0.0000000000,0.0000000000,Pass,Pass
 Environment,BERLIN ANN HTG 99.6% CONDNS DB,SizingPeriod:DesignDay,02/21,02/21,WinterDesignDay,1,N/A,N/A,N/A,N/A,N/A,N/A
 Environment:Daylight Saving,No,SizingPeriod:DesignDay
 Environment:Design Day Data,-11.80,0.00,DefaultMultipliers,100738,100,3.3,0.00,No,No
 Environment:Design Day Misc, 52,1214.6,0.1445,6.0579E-002,1.0,-13.80,-10.8,ASHRAEClearSky
 Environment:WarmupDays,  6
- Warmup Convergence Information,THERMAL ZONE 1,SizingPeriod: BERLIN ANN HTG 99.6% CONDNS DB,5.9211974712E-002,0.1756555800,Pass,Pass,1.4308793309E-003,4.5503274510E-003,Pass,Pass
+ Warmup Convergence Information,THERMAL ZONE 1,SizingPeriod: BERLIN ANN HTG 99.6% CONDNS DB,1.3050579789E-002,5.6767680376E-002,Pass,Pass,2.7817695264E-004,1.3993125761E-003,Pass,Pass
 Environment,BERLIN ANN HTG WIND 99.6% CONDNS WS=>MCDB,SizingPeriod:DesignDay,02/21,02/21,WinterDesignDay,1,N/A,N/A,N/A,N/A,N/A,N/A
 Environment:Daylight Saving,No,SizingPeriod:DesignDay
 Environment:Design Day Data,6.30,0.00,DefaultMultipliers,100738,100,12.8,0.00,No,No
 Environment:Design Day Misc, 52,1214.6,0.1445,6.0579E-002,1.0,-13.80,-10.8,ASHRAEClearSky
 Environment:WarmupDays,  6
- Warmup Convergence Information,THERMAL ZONE 1,SizingPeriod: BERLIN ANN HTG WIND 99.6% CONDNS WS=>MCDB,8.7426894058E-004,1.6565877541E-003,Pass,Pass,6.8569858943E-003,4.6285550469E-002,Pass,Pass
+ Warmup Convergence Information,THERMAL ZONE 1,SizingPeriod: BERLIN ANN HTG WIND 99.6% CONDNS WS=>MCDB,7.3596371831E-003,3.2192286143E-002,Pass,Pass,1.8478328018E-004,8.6230141819E-004,Pass,Pass
 Environment,BERLIN ANN HUM_N 99.6% CONDNS DP=>MCDB,SizingPeriod:DesignDay,02/21,02/21,WinterDesignDay,1,N/A,N/A,N/A,N/A,N/A,N/A
 Environment:Daylight Saving,No,SizingPeriod:DesignDay
 Environment:Design Day Data,-10.80,0.00,DefaultMultipliers,100738,100,3.3,0.00,No,No
 Environment:Design Day Misc, 52,1214.6,0.1445,6.0579E-002,1.0,-13.80,-10.8,ASHRAEClearSky
 Environment:WarmupDays,  6
- Warmup Convergence Information,THERMAL ZONE 1,SizingPeriod: BERLIN ANN HUM_N 99.6% CONDNS DP=>MCDB,5.7377046691E-002,0.1710533256,Pass,Pass,1.4033804956E-003,4.4782874465E-003,Pass,Pass
+ Warmup Convergence Information,THERMAL ZONE 1,SizingPeriod: BERLIN ANN HUM_N 99.6% CONDNS DP=>MCDB,1.2883858426E-002,5.5982687222E-002,Pass,Pass,2.7565488507E-004,1.3882075949E-003,Pass,Pass
 Environment,RUN PERIOD 1,WeatherFileRunPeriod,01/01,01/31,Monday,31,Use RunPeriod Specified Day,No,No,No,Yes,Yes
 Environment:Daylight Saving,No,RunPeriod Object
 Environment:WarmupDays,  6
- Warmup Convergence Information,THERMAL ZONE 1,RunPeriod: RUN PERIOD 1,7.6386650605E-002,0.3299681692,Pass,Pass,0.1456986657,0.5233017880,Pass,Pass
+ Warmup Convergence Information,THERMAL ZONE 1,RunPeriod: RUN PERIOD 1,7.6618618688E-002,9.4040546719E-002,Pass,Pass,1.5145159799E-003,1.8156289904E-003,Pass,Pass
 ! <Program Control Information:Threads/Parallel Sims>, Threading Supported,Maximum Number of Threads, Env Set Threads (OMP_NUM_THREADS), EP Env Set Threads (EP_OMP_NUM_THREADS), IDF Set Threads, Number of Threads Used (Interior Radiant Exchange), Number Nominal Surfaces, Number Parallel Sims
 Program Control:Threads/Parallel Sims, No,1, N/A, N/A, N/A, N/A, N/A, N/A
 End of Data

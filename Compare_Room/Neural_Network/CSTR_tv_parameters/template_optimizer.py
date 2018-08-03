@@ -114,7 +114,7 @@ def optimizer(model):
     # The vectos for each parameter might chance at each sampling time
     number_steps = numSteps/days*364
     # Number of time-varying parameters
-    n_tv_p = 13
+    n_tv_p = 12
     tv_p_values = NP.resize(NP.array([]),(number_steps,n_tv_p,n_horizon))
     disturbances = NP.load('Neural_Network\disturbances.npy').squeeze()
 
@@ -130,17 +130,17 @@ def optimizer(model):
         tv_param_6_values = disturbances[5, time_step: time_step+n_horizon]
         tv_param_7_values = disturbances[6, time_step: time_step+n_horizon]
         tv_param_8_values = disturbances[7, time_step: time_step+n_horizon]
-        tv_param_9_values = disturbances[8, time_step: time_step+n_horizon]
-        tv_param_10_values = disturbances[9, time_step: time_step+n_horizon]
+        # tv_param_9_values = disturbances[8, time_step: time_step+n_horizon]
+        tv_param_9_values = disturbances[9, time_step: time_step+n_horizon]
 
-        tv_param_11_values = constraints[0, time_step: time_step+n_horizon]
-        tv_param_12_values = constraints[1, time_step: time_step+n_horizon]
-        tv_param_13_values = constraints[2, time_step: time_step+n_horizon]
+        tv_param_10_values = constraints[0, time_step: time_step+n_horizon]
+        tv_param_11_values = constraints[1, time_step: time_step+n_horizon]
+        tv_param_12_values = constraints[2, time_step: time_step+n_horizon]
 
         tv_p_values[time_step] = NP.array([tv_param_1_values,tv_param_2_values,tv_param_3_values,
         tv_param_4_values,tv_param_5_values,tv_param_6_values, tv_param_7_values,
         tv_param_8_values, tv_param_9_values,tv_param_10_values,
-        tv_param_11_values, tv_param_12_values, tv_param_13_values])
+        tv_param_11_values, tv_param_12_values])
     # Parameteres of the NLP which may vary along the time (For example a set point that varies at a given time)
     """
     --------------------------------------------------------------------------

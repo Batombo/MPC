@@ -1,0 +1,7 @@
+{
+   "created_at" : "20180323T142009Z",
+   "seed_file" : "../RKF.osm",
+   "steps" : [],
+   "updated_at" : "20180801T134131Z",
+   "weather_file" : "DEU_Berlin.103840_IWEC.epw"
+}

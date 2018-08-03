@@ -41,6 +41,18 @@
     "key_value": "Sub Surface 20",
     "applicable": true
   },
+  "Site Outdoor Air Humidity Ratio": {
+    "variable_name": "Site Outdoor Air Humidity Ratio",
+    "reporting_frequency": "timestep",
+    "key_value": "*",
+    "applicable": true
+  },
+  "Site Outdoor Air Relative Humidity": {
+    "variable_name": "Site Outdoor Air Relative Humidity",
+    "reporting_frequency": "timestep",
+    "key_value": "*",
+    "applicable": true
+  },
   "Export Solar Rad": {
     "variable_name": "Surface Outside Face Incident Solar Radiation Rate per Area",
     "reporting_frequency": "Zone Timestep",

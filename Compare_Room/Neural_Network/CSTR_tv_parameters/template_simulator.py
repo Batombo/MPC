@@ -56,7 +56,7 @@ def simulator(model):
     def tv_p_real_now(current_time):
         current_time = current_time/(minutes/EPTimeStep)
         tv_p_real = disturbances[0,current_time]
-        for i in range(1,10):
+        for i in range(1,9):
             tv_p_real = NP.append(tv_p_real, disturbances[i,current_time])
         tv_p_real = NP.append(tv_p_real,0)
         tv_p_real = NP.append(tv_p_real,0)

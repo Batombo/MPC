@@ -151,9 +151,7 @@ u_blinds_N = data[10,:]
 u_blinds_W = data[11,:]
 v_windspeed = data[12,:]
 Hum_amb = data[13,:]
-Hum_zone = data[14,:]
-
-P_amb = data[15,:]
+P_amb = data[14,:]
 
 
 
@@ -196,9 +194,7 @@ u_blinds_N_train = u_blinds_N[0:int(trainsize*len(u_blinds_N))]
 u_blinds_W_train = u_blinds_W[0:int(trainsize*len(u_blinds_W))]
 v_windspeed_train = v_windspeed[0:int(trainsize*len(v_windspeed))]
 Hum_amb_train = Hum_amb[0:int(trainsize*len(Hum_amb))]
-Hum_zone_train = Hum_zone[0:int(trainsize*len(Hum_zone))]
-
-P_amb_train = P_amb[0:int(trainsize*len(Hum_zone))]
+P_amb_train = P_amb[0:int(trainsize*len(P_amb))]
 
 # Normalize Data
 """
@@ -215,7 +211,7 @@ u_blinds_N_train, u_blinds_W_train,
 u_AHU1_noERC_train, SchedVal_train,
 v_IG_Offices_train, OutdoorTemp_train,
 v_solGlobFac_E_train, v_solGlobFac_N_train, v_solGlobFac_S_train, v_solGlobFac_W_train,
-v_windspeed_train, Hum_amb_train, Hum_zone_train, P_amb_train])))
+v_windspeed_train, Hum_amb_train, P_amb_train])))
 
 
 numbers = 2
@@ -304,7 +300,7 @@ else:
     """
     x_train = x_train.astype('float32')
     y_train = y_train.astype('float32')
-    trained = model.fit(x_train, y_train, validation_split=0.1, shuffle = False, epochs=1000, batch_size=1024, verbose = 2)
+    trained = model.fit(x_train, y_train, validation_split=0, shuffle = False, epochs=100, batch_size=1024, verbose = 2)
     if save == 1:
         model_json = model.to_json()
         with open("model_3.json", "w") as json_file:
@@ -354,9 +350,8 @@ u_blinds_W_test = u_blinds_W[int(0.8*len(u_blinds_W))+1:len(u_blinds_W)]
 
 v_windspeed_test = v_windspeed[int(0.8*len(v_windspeed))+1:len(v_windspeed)]
 Hum_amb_test = Hum_amb[int(0.8*len(Hum_amb))+1:len(Hum_amb)]
-Hum_zone_test = Hum_zone[int(0.8*len(Hum_zone))+1:len(Hum_zone)]
 
-P_amb_test = P_amb[int(0.8*len(Hum_zone))+1:len(Hum_zone)]
+P_amb_test = P_amb[int(0.8*len(P_amb))+1:len(P_amb)]
 
 # do normalization with same mu and var as with training set
 
@@ -365,7 +360,7 @@ u_blinds_N_test, u_blinds_W_test,
 u_AHU1_noERC_test, SchedVal_test,
 v_IG_Offices_test, OutdoorTemp_test,
 v_solGlobFac_E_test, v_solGlobFac_N_test, v_solGlobFac_S_test, v_solGlobFac_W_test,
-v_windspeed_test, Hum_amb_test, Hum_zone_test, P_amb_test])))
+v_windspeed_test, Hum_amb_test, P_amb_test])))
 
 
 features = x_test.shape[1]
@@ -406,8 +401,8 @@ rmse = NP.zeros((3,1))
 rmse[0] = NP.sqrt(mse[0])
 rmse[1] = NP.sqrt(mse[1])
 # rmse[2] = NP.sqrt(mse[2])
-# print("RMSE: " + str(rmse))
-#
+print("RMSE: " + str(rmse))
+
 # P.subplot(2, 1, 1)
 # P.plot(y_test)
 # P.plot(classes)

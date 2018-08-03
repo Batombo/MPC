@@ -81,6 +81,26 @@
       },
       {
          "arguments" : {
+            "reporting_frequency" : "timestep",
+            "variable_name" : "Site Outdoor Air Humidity Ratio"
+         },
+         "description" : "This measure adds an output variable at the requested reporting frequency.",
+         "measure_dir_name" : "AddOutputVariable",
+         "modeler_description" : "The measure just passes in the string and does not validate that it is a proper variable name. It is up to the user to know this or to look at the .rdd file from a previous simulation run.",
+         "name" : "Site Outdoor Air Humidity Ratio"
+      },
+      {
+         "arguments" : {
+            "reporting_frequency" : "timestep",
+            "variable_name" : "Site Outdoor Air Relative Humidity"
+         },
+         "description" : "This measure adds an output variable at the requested reporting frequency.",
+         "measure_dir_name" : "AddOutputVariable",
+         "modeler_description" : "The measure just passes in the string and does not validate that it is a proper variable name. It is up to the user to know this or to look at the .rdd file from a previous simulation run.",
+         "name" : "Site Outdoor Air Relative Humidity"
+      },
+      {
+         "arguments" : {
             "reporting_frequency" : "Zone Timestep",
             "variable_name" : "Surface Outside Face Incident Solar Radiation Rate per Area"
          },
@@ -160,6 +180,6 @@
          "name" : "Baseboard Total Heating Rate"
       }
    ],
-   "updated_at" : "20180723T120445Z",
+   "updated_at" : "20180802T164214Z",
    "weather_file" : "DEU_Berlin.103840_IWEC.epw"
 }

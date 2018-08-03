@@ -7380,7 +7380,7 @@ OS:ZoneVentilation:DesignFlowRate,
   0.03636,                                !- Temperature Term Coefficient
   0.1177,                                 !- Velocity Term Coefficient
   0,                                      !- Velocity Squared Term Coefficient
-  23,                                     !- Minimum Indoor Temperature {C}
+  -10,                                    !- Minimum Indoor Temperature {C}
   ,                                       !- Minimum Indoor Temperature Schedule Name
   100,                                    !- Maximum Indoor Temperature {C}
   ,                                       !- Maximum Indoor Temperature Schedule Name
@@ -7543,7 +7543,7 @@ OS:Schedule:Day,
 OS:ThermostatSetpoint:DualSetpoint,
   {23612a09-062f-467c-b228-0a5a6d4efdf8}, !- Handle
   Thermostat Setpoint Dual Setpoint 1,    !- Name
-  {09614427-a80e-4def-b3c8-4569d9820c87}, !- Heating Setpoint Temperature Schedule Name
+  {727c3a45-848c-4e90-b18b-e61dd272120e}, !- Heating Setpoint Temperature Schedule Name
   {648d244f-87dc-482b-b355-99d5f3b442ef}; !- Cooling Setpoint Temperature Schedule Name
 
 OS:RadianceParameters,
@@ -7595,13 +7595,6 @@ OS:ZoneCapacitanceMultiplier:ResearchSpecial,
   ;                                       !- Carbon Dioxide Capacity Multiplier
 
 OS:Output:Variable,
-  {f27920fe-03b5-438a-b16f-00de8aeec0c8}, !- Handle
-  Output Variable 1,                      !- Name
-  *,                                      !- Key Value
-  Zone People Convective Heating Rate,    !- Variable Name
-  Timestep;                               !- Reporting Frequency
-
-OS:Output:Variable,
   {50a2b09c-9924-4819-8d5a-9b3703b29ea0}, !- Handle
   Output Variable 3,                      !- Name
   *,                                      !- Key Value
@@ -7637,23 +7630,45 @@ OS:Output:Variable,
   Timestep;                               !- Reporting Frequency
 
 OS:Output:Variable,
-  {a8da7d83-0a31-4607-a874-5922375773dc}, !- Handle
-  Output Variable 7,                      !- Name
+  {a4adf971-dd39-4a2f-9c05-f415892376de}, !- Handle
+  Output Variable 1,                      !- Name
   *,                                      !- Key Value
-  Baseboard Radiant Heating Rate,         !- Variable Name
-  Timestep;                               !- Reporting Frequency
+  Zone Air Humidity Ratio,                !- Variable Name
+  Hourly;                                 !- Reporting Frequency
 
-OS:Output:Variable,
-  {423a9f5c-9c42-482a-a682-4bcd94020785}, !- Handle
-  Output Variable 8,                      !- Name
-  *,                                      !- Key Value
-  Baseboard Convective Heating Rate,      !- Variable Name
-  Timestep;                               !- Reporting Frequency
+OS:Schedule:Ruleset,
+  {b8c76644-821e-4c20-b294-e30d879fa987}, !- Handle
+  Ventilation,                            !- Name
+  {c50de33e-2a31-403b-929e-8d1c42a993ef}, !- Schedule Type Limits Name
+  {36a3bd39-78ca-4842-8960-e91d0e0e75b4}; !- Default Day Schedule Name
 
-OS:Output:Variable,
-  {8d442b42-e918-4fcf-864d-51028cb3951c}, !- Handle
-  Output Variable 9,                      !- Name
-  *,                                      !- Key Value
-  Boiler Mass Flow Rate,                  !- Variable Name
-  Timestep;                               !- Reporting Frequency
+OS:Schedule:Day,
+  {36a3bd39-78ca-4842-8960-e91d0e0e75b4}, !- Handle
+  Schedule Day 2,                         !- Name
+  {c50de33e-2a31-403b-929e-8d1c42a993ef}, !- Schedule Type Limits Name
+  ,                                       !- Interpolate to Timestep
+  12,                                     !- Hour 1
+  0,                                      !- Minute 1
+  0,                                      !- Value Until Time 1
+  16,                                     !- Hour 2
+  0,                                      !- Minute 2
+  1,                                      !- Value Until Time 2
+  24,                                     !- Hour 3
+  0,                                      !- Minute 3
+  0;                                      !- Value Until Time 3
+
+OS:Schedule:Ruleset,
+  {727c3a45-848c-4e90-b18b-e61dd272120e}, !- Handle
+  Step Heating,                           !- Name
+  {94847803-faba-4331-9ace-c3e1da359c10}, !- Schedule Type Limits Name
+  {67316e1c-eb11-4468-a8c3-944e5d5971a2}; !- Default Day Schedule Name
+
+OS:Schedule:Day,
+  {67316e1c-eb11-4468-a8c3-944e5d5971a2}, !- Handle
+  Schedule Day 3,                         !- Name
+  {94847803-faba-4331-9ace-c3e1da359c10}, !- Schedule Type Limits Name
+  ,                                       !- Interpolate to Timestep
+  24,                                     !- Hour 1
+  0,                                      !- Minute 1
+  20;                                     !- Value Until Time 1
 
