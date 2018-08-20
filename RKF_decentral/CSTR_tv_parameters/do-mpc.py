@@ -116,7 +116,7 @@ while (configurations[0].simulator.t0_sim + configurations[0].simulator.t_step_s
             for k in zones: vars()['configuration_' + k].optimizer.tv_p_values[step_index,-2,:] = NP.squeeze(v_opt[U_offset + 2])
         elif zone == 'Entrance':
             for k in zones: vars()['configuration_' + k].optimizer.tv_p_values[step_index,-1,:] = NP.squeeze(v_opt[U_offset + 3])
-        print vars()['configuration_' + zone].optimizer.tv_p_values[step_index,:,:]
+        # print vars()['configuration_' + zone].optimizer.tv_p_values[step_index,:,:]
     """
     ----------------------------
     do-mpc: Simulator

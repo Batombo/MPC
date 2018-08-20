@@ -55,11 +55,6 @@ def step_simulator(model_fmu, simTime, secStep, configurations):
             configurations[i].simulator.faultDetector = NP.concatenate((configurations[i].simulator.faultDetector, NP.zeros((1,1)) ), axis = 1)
     # these states are shared by all zones
     states_all = []
-    states_all.append(model_fmu.get('u_blinds_E_val'))
-    states_all.append(model_fmu.get('u_blinds_N_val'))
-    states_all.append(model_fmu.get('u_blinds_S_val'))
-    states_all.append(model_fmu.get('u_blinds_W_val'))
-
     states_all.append(model_fmu.get('v_Tamb'))
     states_all.append(model_fmu.get('v_solGlobFac_E'))
     states_all.append(model_fmu.get('v_solGlobFac_N'))
@@ -72,13 +67,23 @@ def step_simulator(model_fmu, simTime, secStep, configurations):
     for i in range(len(configurations)):
         states = []
         states.append(model_fmu.get('T_' + zones[i]))
-        for k in range(0,4): states.append(states_all[k])
+        blinds = [0,0,0,0]
+        if zones[i] in eastSide:
+            blinds[0] = tmp[0]
+        if zones[i] in northSide:
+            blinds[1] = tmp[1]
+        if zones[i] in southSide:
+            blinds[2] = tmp[2]
+        if zones[i] in westSide:
+            blinds[3] = tmp[3]
+        for k in range(0,len(blinds)): states.append(NP.asarray([blinds[k]]))
+
         states.append(NP.asarray([u_mpc[i,4]]))
         states.append(NP.asarray([u_mpc[i,5]]))
         states.append(model_fmu.get('v_IG_' + zones[i]))
-        for k in range(4,len(states_all)): states.append(states_all[k])
+        for k in range(0,len(states_all)): states.append(states_all[k])
         states = NP.squeeze(states)
-
+        
         # close loop for all configurations
         configurations[i].simulator.xf_sim = states
         # Update the initial condition for the next iteration

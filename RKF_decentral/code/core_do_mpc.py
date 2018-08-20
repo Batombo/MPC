@@ -232,7 +232,7 @@ class configuration:
         #NOTE: this could be passed as parameters of the optimizer class
         opts["ipopt.max_iter"] = 500
         opts["ipopt.tol"] = 1e-6
-        opts["ipopt.print_level"] = 5
+        opts["ipopt.print_level"] = 0
         # Setup the solver
         opts["print_time"] = False
 
