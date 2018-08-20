@@ -97,16 +97,33 @@ def model(zone):
     template_model: define algebraic and differential equations
     --------------------------------------------------------------------------
     """
+
     if zone == 'Coworking':
         input = vertcat(x, u_blinds_E, u_blinds_N_val, u_blinds_S, u_blinds_W, u[4:], v)
+    elif zone == 'Corridor':
+        input = vertcat(x, u_blinds_E_val, u_blinds_N, u_blinds_S, u_blinds_W, u[4:], v)
+    elif zone == 'Entrance':
+        input = vertcat(x, u_blinds_E, u_blinds_N, u_blinds_S, u_blinds_W, u[4:], v)
+    elif zone == 'LabNorth':
+        input = vertcat(x, u_blinds_E, u_blinds_N_val, u_blinds_S, u_blinds_W_val, u[4:], v)
+    elif zone == 'LabSouth':
+        input = vertcat(x, u_blinds_E, u_blinds_N, u_blinds_S_val, u_blinds_W_val, u[4:], v)
+    elif zone == 'MeetingSouth':
+        input = vertcat(x, u_blinds_E, u_blinds_N, u_blinds_S, u_blinds_W, u[4:], v)
     elif zone == 'MeetingNorth':
         input = vertcat(x, u_blinds_E, u_blinds_N, u_blinds_S, u_blinds_W, u[4:], v)
-    elif zone == 'MeetingSouth':
-        input = vertcat(x, u_blinds_E_val, u_blinds_N_val, u_blinds_S, u_blinds_W_val, u[4:], v)
-    elif zone == 'Entrance':
-        input = vertcat(x, u_blinds_E_val, u_blinds_N_val, u_blinds_S_val, u_blinds_W, u[4:], v)
-    else:
-        input = vertcat(x, u_blinds_E_val, u_blinds_N_val, u_blinds_S_val, u_blinds_W_val, u[4:], v)
+    elif zone == 'Nerdroom1':
+        input = vertcat(x, u_blinds_E, u_blinds_N, u_blinds_S_val, u_blinds_W, u[4:], v)
+    elif zone == 'Nerdroom2':
+        input = vertcat(x, u_blinds_E, u_blinds_N, u_blinds_S_val, u_blinds_W, u[4:], v)
+    elif zone == 'RestroomM':
+        input = vertcat(x, u_blinds_E, u_blinds_N, u_blinds_S, u_blinds_W, u[4:], v)
+    elif zone == 'RestroomW':
+        input = vertcat(x, u_blinds_E_val, u_blinds_N, u_blinds_S, u_blinds_W, u[4:], v)
+    elif zone == 'Space01':
+        input = vertcat(x, u_blinds_E_val, u_blinds_N, u_blinds_S, u_blinds_W, u[4:], v)
+    elif zone == 'Stairway':
+        input = vertcat(x, u_blinds_E_val, u_blinds_N, u_blinds_S, u_blinds_W, u[4:], v)
 
     # input = vertcat(x,u,v)
     input = NP.divide(input - x_lb_NN, x_ub_NN - x_lb_NN)
@@ -131,14 +148,32 @@ def model(zone):
     #
     if zone == 'Coworking':
         dx = vertcat(dT, u_blinds_E, u_blinds_N_val, u_blinds_S, u_blinds_W, u[4:], v)
+    elif zone == 'Corridor':
+        dx = vertcat(dT, u_blinds_E_val, u_blinds_N, u_blinds_S, u_blinds_W, u[4:], v)
+    elif zone == 'Entrance':
+        dx = vertcat(dT, u_blinds_E, u_blinds_N, u_blinds_S, u_blinds_W, u[4:], v)
+    elif zone == 'LabNorth':
+        dx = vertcat(dT, u_blinds_E, u_blinds_N_val, u_blinds_S, u_blinds_W_val, u[4:], v)
+    elif zone == 'LabSouth':
+        dx = vertcat(dT, u_blinds_E, u_blinds_N, u_blinds_S_val, u_blinds_W_val, u[4:], v)
+    elif zone == 'MeetingSouth':
+        dx = vertcat(dT, u_blinds_E, u_blinds_N, u_blinds_S, u_blinds_W, u[4:], v)
     elif zone == 'MeetingNorth':
         dx = vertcat(dT, u_blinds_E, u_blinds_N, u_blinds_S, u_blinds_W, u[4:], v)
-    elif zone == 'MeetingSouth':
-        dx = vertcat(dT, u_blinds_E_val, u_blinds_N_val, u_blinds_S, u_blinds_W_val, u[4:], v)
-    elif zone == 'Entrance':
-        dx = vertcat(dT, u_blinds_E_val, u_blinds_N_val, u_blinds_S_val, u_blinds_W, u[4:], v)
-    else:
-        dx = vertcat(dT, u_blinds_E_val, u_blinds_N_val, u_blinds_S_val, u_blinds_W_val, u[4:], v)
+    elif zone == 'Nerdroom1':
+        dx = vertcat(dT, u_blinds_E, u_blinds_N, u_blinds_S_val, u_blinds_W, u[4:], v)
+    elif zone == 'Nerdroom2':
+        dx = vertcat(dT, u_blinds_E, u_blinds_N, u_blinds_S_val, u_blinds_W, u[4:], v)
+    elif zone == 'RestroomM':
+        dx = vertcat(dT, u_blinds_E, u_blinds_N, u_blinds_S, u_blinds_W, u[4:], v)
+    elif zone == 'RestroomW':
+        dx = vertcat(dT, u_blinds_E_val, u_blinds_N, u_blinds_S, u_blinds_W, u[4:], v)
+    elif zone == 'Space01':
+        dx = vertcat(dT, u_blinds_E_val, u_blinds_N, u_blinds_S, u_blinds_W, u[4:], v)
+    elif zone == 'Stairway':
+        dx = vertcat(dT, u_blinds_E_val, u_blinds_N, u_blinds_S, u_blinds_W, u[4:], v)
+
+
     # dx = vertcat(dT,u,v)
     # Concatenate differential states, algebraic states, control inputs and right-hand-sides
     _x = x
@@ -231,7 +266,7 @@ def model(zone):
     lterm = 0.5*dHeatrate + 10*u_rad
     mterm = 0.5*dHeatrate + 10*u_rad
     # Penalty term for the control movements 1e4, 100
-    rterm = NP.concatenate((1e4*NP.ones(4), 1e4*NP.ones(1), 10*NP.ones(1)))
+    rterm = NP.concatenate((1e4*NP.ones(4), 1e4*NP.ones(1), 20*NP.ones(1)))
     """
     --------------------------------------------------------------------------
     template_model: pass information (not necessary to edit)
