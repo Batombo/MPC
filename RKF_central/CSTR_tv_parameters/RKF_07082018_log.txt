@@ -1,0 +1,2 @@
+FMIL: module = FMI1XML, log level = 2: Detected on line:574 of modelDescription.xml
+FMIL: module = FMI1XML, log level = 2: Found capability flag canSignalEvents which have been deprecated as it fills no function

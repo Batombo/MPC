@@ -19,9 +19,6 @@ numSteps = days*hours*EPTimeStep
 timeStop = days*hours*minutes*seconds
 secStep = timeStop/numSteps
 
-u_blinds = np.load('u_blinds.npy')
-#np.save('u_blinds.npy', [u_blinds_E, u_blinds_N, u_blinds_S, u_blinds_W])
-
 # data =  np.load('full_reg.npy')
 # np.save('disturbances.npy', [data[4,0:6*24*365], data[3,0:6*24*365], data[5,0:6*24*365], data[6,0:6*24*365], data[7,0:6*24*365], data[8,0:6*24*365]])
 
@@ -78,13 +75,13 @@ def radiation2shading(vsol, threshold):
 for i in range(0,7):
     # Load FMU created from compile_fmu() or EnergyPlusToFMU
     if i == 0:
-        modelName = 'RKF_Chemnitz'
-    elif i == 1:
-        modelName = 'RKF_Gorzow'
-    elif i == 2:
-        modelName = 'RKF_Hamburg'
-    elif i == 3:
         modelName = 'RKF_Potsdam'
+    elif i == 1:
+        modelName = 'RKF_Chemnitz'
+    elif i == 2:
+        modelName = 'RKF_Gorzow'
+    elif i == 3:
+        modelName = 'RKF_Hamburg'
     elif i == 4:
         modelName = 'RKF_Poznan'
     elif i == 5:
@@ -233,8 +230,8 @@ for i in range(0,7):
     # P.xlabel('Time (days)')
     # P.show()
     model = None
-np.save('2_reg.npy', [SchedVal, HeatRate, u_AHU1_noERC, ZoneTemp, v_Tamb, v_IG_Offices,
+np.save('full.npy', [SchedVal, HeatRate, u_AHU1_noERC, ZoneTemp, v_Tamb, v_IG_Offices,
 v_solGlobFac_E, v_solGlobFac_N, v_solGlobFac_S, v_solGlobFac_W,
 u_blinds_N, u_blinds_W,
 v_windspeed, Hum_amb, P_amb])
-# np.save('disturbances.npy', [v_IG_Offices, v_Tamb, v_solGlobFac_E, v_solGlobFac_N, v_solGlobFac_S, v_solGlobFac_W, v_windspeed, Hum_amb, Hum_zone, P_amb])
+# np.save('disturbances.npy', [v_IG_Offices, v_Tamb, v_solGlobFac_E, v_solGlobFac_N, v_solGlobFac_S, v_solGlobFac_W, v_windspeed, Hum_amb, P_amb])

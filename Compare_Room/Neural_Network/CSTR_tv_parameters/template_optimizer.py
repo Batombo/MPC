@@ -130,8 +130,7 @@ def optimizer(model):
         tv_param_6_values = disturbances[5, time_step: time_step+n_horizon]
         tv_param_7_values = disturbances[6, time_step: time_step+n_horizon]
         tv_param_8_values = disturbances[7, time_step: time_step+n_horizon]
-        # tv_param_9_values = disturbances[8, time_step: time_step+n_horizon]
-        tv_param_9_values = disturbances[9, time_step: time_step+n_horizon]
+        tv_param_9_values = disturbances[8, time_step: time_step+n_horizon]
 
         tv_param_10_values = constraints[0, time_step: time_step+n_horizon]
         tv_param_11_values = constraints[1, time_step: time_step+n_horizon]

@@ -65,10 +65,8 @@ observer_1 = template_observer.observer(model_1)
 simulator_1 = template_simulator.simulator(model_1)
 # Create a configuration
 configuration_1 = core_do_mpc.configuration(model_1, optimizer_1, observer_1, simulator_1)
-
 # Set up the solvers
 configuration_1.setup_solver()
-
 # Load FMU created from compile_fmu() or EnergyPlusToFMU
 modelName = 'RKF'
 model_fmu = load_fmu(modelName+'.fmu')

@@ -109,7 +109,7 @@ Training Data Prep
 ----------------------------------------
 """
 
-data = NP.load('2_reg.npy')
+data = NP.load('60_reg.npy')
 # SchedVal = shuffleMonths(data[0,:])
 # HeatRate = shuffleMonths(data[1,:])
 # u_AHU1_noERC = shuffleMonths(data[2,:])
@@ -136,6 +136,8 @@ if load == 1:
     x_ub = lbub[1]
     y_lb = lbub[2]
     y_ub = lbub[3]
+
+
 SchedVal = data[0,:]
 HeatRate = data[1,:]/100
 u_AHU1_noERC = data[2,:]
@@ -153,13 +155,6 @@ v_windspeed = data[12,:]
 Hum_amb = data[13,:]
 P_amb = data[14,:]
 
-
-
-
-# u_blinds_E[20] = 1e-3
-# u_blinds_N[20] = 1e-3
-# u_blinds_S[20] = 1e-3
-# u_blinds_W[20] = 1e-3
 
 
 
@@ -224,12 +219,14 @@ for i in range(0,l-numbers+1):
 x_train = tmp[:]
 # Delete the current ZoneTemp(t)
 x_train = NP.delete(x_train, features*(numbers-1), 1)
+
 # x_train = NP.delete(x_train, features*(numbers-1)+1-1, 1) # -1 since already one element missing
 # x_train = NP.delete(x_train, features*(numbers-1)+1-1, 1) # -1 since already one element missing
 if load == 0:
     x_lb = NP.min(x_train,axis =0)
     x_ub = NP.max(x_train,axis =0)
 x_train = NP.divide(x_train - x_lb, x_ub - x_lb)
+bp()
 
 """
 -------
@@ -278,13 +275,51 @@ else:
     drate = 0.0
     model = Sequential()
     model.add(Dense(units = x_train.shape[1], activation='tanh',input_dim = x_train.shape[1]))
-    model.add(Dropout(drate))
+
     model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
-    model.add(Dropout(drate))
     model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
-    model.add(Dropout(drate))
     model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
-    model.add(Dropout(drate))
+
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+
+
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+
+
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+
+
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+
+
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+    model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='tanh'))
+
     # model.add(Dense(units = int(NP.round(x_train.shape[1]/1)), activation='relu'))
 
     model.add(Dense(units = 2, activation='linear'))
@@ -300,16 +335,16 @@ else:
     """
     x_train = x_train.astype('float32')
     y_train = y_train.astype('float32')
-    trained = model.fit(x_train, y_train, validation_split=0, shuffle = False, epochs=100, batch_size=1024, verbose = 2)
+    trained = model.fit(x_train, y_train, validation_split=0, shuffle = False, epochs=2, batch_size=1024, verbose = 2)
     if save == 1:
         model_json = model.to_json()
-        with open("model_3.json", "w") as json_file:
+        with open("model_test.json", "w") as json_file:
             json_file.write(model_json)
         # serialize weights to HDF5
-        model.save_weights("model_3.h5")
+        model.save_weights("model_test.h5")
         print("Saved model to disk")
-        NP.save('lbub.npy', [x_lb, x_ub, y_lb, y_ub])
-        model.save('NN_model')
+        NP.save('lbub_test.npy', [x_lb, x_ub, y_lb, y_ub])
+        # model.save('NN_model')
     # P.subplot(2, 1, 1)
     # P.plot(trained.history['val_loss'] ,'r', label = 'Val loss')
     # P.plot(trained.history['loss'], 'b', label = 'Train loss')

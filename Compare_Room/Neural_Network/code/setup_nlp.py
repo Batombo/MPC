@@ -214,7 +214,7 @@ def setup_nlp(model, optimizer):
       tv_pk = MX.sym("tv_pk",ntv_p)
       # Control
       uk = MX.sym("uk",nu)
-      #uk_prev = MX.sym ("uk_prev",nu)
+      #uk_prev = SX.sym ("uk_prev",nu)
       # State trajectory
       n_ik = ni*(deg+1)*nx
       ik = MX.sym("ik",n_ik)
@@ -337,7 +337,7 @@ def setup_nlp(model, optimizer):
       n_ik = 0
       # Penalty terms for the soft constraints
       EPSILON = NP.resize(NP.array([],dtype=MX),(cons.size1()))
-      #uk_prev = MX.sym ("uk_prev",nu)
+      #uk_prev = SX.sym ("uk_prev",nu)
       pass
 
     # Number of branches

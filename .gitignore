@@ -1,2 +1,11 @@
 Compare_Room/Neural_Network/CSTR_tv_parameters/360.pickle
 Compare_Room/Neural_Network/CSTR_tv_parameters/363.pickle
+Compare_Room/RKF/
+Compare_Room/RKF.sql
+*.pickle
+*.npy
+RKF_central/RKF/
+RKF_central/RKF_07082018/
+RKF_decentral/RKF/out.osw
+RKF_decentral/RKF/
+RKF_decentral/RKF_07082018/

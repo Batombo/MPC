@@ -234,7 +234,10 @@ class configuration:
         opts["ipopt.print_level"] = 5
         # Setup the solver
         opts["print_time"] = False
+        start_time = time.time()
         solver = nlpsol("solver", self.optimizer.nlp_solver, nlp_dict_out['nlp_fcn'], opts)
+        elapsed_time = time.time() - start_time
+        bp()
         arg = {}
         # Initial condition
         arg["x0"] = nlp_dict_out['vars_init']
@@ -352,9 +355,7 @@ class configuration:
         Baseboard Heater
         """
         model_fmu.set('u_rad_OfficesZ1', u_mpc[3])
-        # model_fmu.set('u_rad_OfficesZ2', u_mpc[5])
-        # model_fmu.set('u_rad_OfficesZ1', x_next[0])
-        # model_fmu.set('u_rad_OfficesZ2', x_next[0])
+
         # do one step simulation
         res = model_fmu.do_step(current_t=simTime, step_size=secStep, new_step=True)
         # bp()
@@ -390,8 +391,22 @@ class configuration:
         states.append(model_fmu.get('P_amb'))
         states = NP.squeeze(states)
 
+
+        # prev = self.mpc_data.mpc_states[simTime/600,features*(numbers-1):]
+
+
         # states = NP.reshape(states, (states.shape[0],1))
-        if simTime/60 >= 140100 and  simTime/60 <= 141000:
+        # if simTime/60 >= 431400 and  simTime/60 <= 431610:
+        if u_mpc[2] != 0:
+            print u_mpc
+            bp()
+        # bp()
+        disturbances = NP.load('Neural_Network\disturbances.npy').squeeze()
+        disturbances_lb = NP.min(disturbances,axis =1)
+        disturbances_ub = NP.max(disturbances,axis =1)
+        x_lb = NP.concatenate((x_lb_NN[0:5] - 1e-2, disturbances_lb)) # -20000* NP.ones(features*numbers)#
+        x_ub = NP.concatenate((x_ub_NN[0:5] + 1e-2, disturbances_ub)) # 20000* NP.ones(features*numbers)#
+        if (NP.squeeze(NP.asarray(x_next)) - x_lb < 0).all() or (x_ub - NP.squeeze(NP.asarray(x_next))  < 0).all():
             bp()
         # print states - x_next
         self.simulator.xf_sim = states
@@ -464,7 +479,7 @@ class configuration:
         for i in range(0,duration):
             u_mpc = self.optimizer.u_mpc
             u_mpc = NP.asarray(u_mpc, dtype=np.float32)
-            u_mpc[2] = float(self.f_const_ahu(i)) #np.round(np.random.normal(17,0.1,1),2)
+            u_mpc[3] = float(self.f_const(i)) #np.round(np.random.normal(17,0.1,1),2)
             tv_p_real = self.simulator.tv_p_real_now(self.simulator.t0_sim)
             rhs_unscaled = substitute(self.model.rhs, self.model.x, self.model.x * self.model.ocp.x_scaling)/self.model.ocp.x_scaling
             rhs_unscaled = substitute(rhs_unscaled, self.model.u, self.model.u * self.model.ocp.u_scaling)
@@ -483,7 +498,7 @@ class configuration:
             states = []
             u_mpc = self.optimizer.u_mpc
             u_mpc = NP.asarray(u_mpc, dtype=np.float32)
-            u_mpc[2] = float(self.f_const_ahu(i)) #np.round(np.random.normal(17,0.1,1),2)
+            u_mpc[3] = float(self.f_const(i)) #np.round(np.random.normal(17,0.1,1),2)
             """
             Blinds
             """
@@ -521,7 +536,6 @@ class configuration:
             states.append(model_fmu.get('v_solGlobFac_W'))
             states.append(model_fmu.get('windspeed_Z1'))
             states.append(model_fmu.get('Hum_amb'))
-            states.append(model_fmu.get('Hum_zone'))
             states.append(model_fmu.get('P_amb'))
 
             states = NP.squeeze(states)
@@ -532,10 +546,10 @@ class configuration:
             sched[i,:] = u_mpc
 
         # bp()
-        rmse = NP.sqrt(NP.mean((result_Ep[:,0]-result_NN[:,0])**2,axis=0))
+        rmse = NP.sqrt(NP.mean((result_Ep[:,0]-result_NN[:,features*(numbers-1)])**2,axis=0))
         # NP.sqrt(NP.mean((result_Ep - result_NN)**2,axis=0))
         print("RMSE: " + str(rmse))
-        NP.argmax(NP.abs(result_NN[:,0]-result_Ep[:,0]),axis=0)
+        NP.argmax(NP.abs(result_NN[:,features*(numbers-1)]-result_Ep[:,0]),axis=0)
         P.subplot(3, 1, 1)
         P.plot(result_NN[:,0], linewidth = 2.0)
         P.plot(result_Ep[:,0], linewidth = 2.0)
@@ -543,13 +557,13 @@ class configuration:
         P.ylabel('ZoneTemp')
         P.legend(['NN','E+','Setpoint'])
         P.subplot(3, 1, 2)
-        P.plot(result_NN[:,0] - result_Ep[:,0])
+        P.plot(result_NN[:,features*(numbers-1)] - result_Ep[:,0])
         # P.plot(result_NN[:,8] - result_Ep[:,8])
         P.ylabel('Difference')
 
         P.subplot(3, 1, 3)
-        P.plot(result_NN[:,8])
-        P.plot(result_Ep[:,8])
+        P.plot(result_NN[:,features*(numbers-1) + 7])
+        P.plot(result_Ep[:,7])
         P.ylabel('Difference v_IG_Offices')
         P.show()
 
@@ -573,7 +587,7 @@ class configuration:
         param["uk_prev"] = self.optimizer.u_mpc
         step_index = int(self.simulator.t0_sim / self.simulator.t_step_simulator)
         param["TV_P"] = self.optimizer.tv_p_values[step_index]
-        print "tv_p: " + str(param["TV_P"][:,:])
+        # print "tv_p: " + str(param["TV_P"][:,:])
         self.optimizer.arg['lbx'][X_offset[0,0]:X_offset[0,0]+nx] = observed_states
         self.optimizer.arg['ubx'][X_offset[0,0]:X_offset[0,0]+nx] = observed_states
         self.optimizer.arg["x0"] = self.optimizer.opt_result_step.optimal_solution

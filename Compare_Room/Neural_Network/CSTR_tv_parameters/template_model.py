@@ -27,21 +27,22 @@ import core_do_mpc
 import scipy.io
 from keras.models import model_from_json
 from pdb import set_trace as bp
+from vars import *
 
 def model():
-    lbub = NP.load('Neural_Network\lbub.npy')
+    lbub = NP.load('Neural_Network\lbub_60.npy')
     x_lb_NN = lbub[0]
     x_ub_NN = lbub[1]
     y_lb_NN = lbub[2]
     y_ub_NN = lbub[3]
 
 
-    json_file = open('Neural_Network\model_3.json', 'r')
+    json_file = open('Neural_Network\model_60.json', 'r')
     model_json = json_file.read()
     json_file.close()
     model = model_from_json(model_json)
     # load weights into new model
-    model.load_weights("Neural_Network\model_3.h5")
+    model.load_weights("Neural_Network\model_60.h5")
     Theta = {}
     # for i in range(len(model.layers)):
     i = 0
@@ -59,8 +60,6 @@ def model():
 
     alpha   = MX.sym("alpha")
     # Define the differential states as CasADi symbols
-    features = 14
-    numbers = 2 - 1
     x = MX.sym("x", features*numbers)
 
     # Define the algebraic states as CasADi symbols
@@ -91,7 +90,6 @@ def model():
 
     v = vertcat(v_IG_Offices, v_Tamb, v_solGlobFac_E, v_solGlobFac_N, v_solGlobFac_S, v_solGlobFac_W, v_windspeed, v_Hum_amb, v_P_amb, u_ahu_ub ,setp_ub, setp_lb)
 
-
     """
     --------------------------------------------------------------------------
     template_model: define algebraic and differential equations
@@ -99,6 +97,7 @@ def model():
     """
     input = vertcat(x,u,v[0:9])
     input = NP.divide(input - x_lb_NN, x_ub_NN - x_lb_NN)#(input - x_lb_NN)*float(1)/(x_ub_NN - x_lb_NN)
+
     a1 = input
     a1 = vertcat(1,a1)
     z1 = mtimes(Theta['Theta1'],a1)
@@ -125,7 +124,7 @@ def model():
 
     dx0 = NP.multiply(a6[0], y_ub_NN[0]-y_lb_NN[0]) + y_lb_NN[0]#dx*(y_ub_NN-y_lb_NN) + y_lb_NN
     dx1 = NP.multiply(a6[1], y_ub_NN[1]-y_lb_NN[1]) + y_lb_NN[1]
-    dx = vertcat(dx0, u,v[0:9])
+    dx = vertcat(dx0, u, v[0:9])
     # Concatenate differential states, algebraic states, control inputs and right-hand-sides
     _x = x
 
@@ -150,14 +149,16 @@ def model():
     """
     # Initial condition for the states
     x0 = NP.array([18,0,0,0,18,226,5,0,0,0,0,2,0.005,100100])
+    # x0 = NP.concatenate((x0,x0))
     # No algebraic states
     z0 = NP.array([])
     # Bounds on the states. Use "inf" for unconstrained states
-    x_lb = x_lb_NN[0:features*numbers] - 1e-2 # -20000* NP.ones(features*numbers)#
-    x_ub = x_ub_NN[0:features*numbers] + 1e-2 # 20000* NP.ones(features*numbers)#
+    disturbances = NP.load('Neural_Network\disturbances.npy').squeeze()
+    disturbances_lb = NP.min(disturbances,axis =1)
+    disturbances_ub = NP.max(disturbances,axis =1)
+    x_lb = NP.concatenate((x_lb_NN[0:5] - 1e-2, disturbances_lb)) # -20000* NP.ones(features*numbers)#
+    x_ub = NP.concatenate((x_ub_NN[0:5] + 1e-2, disturbances_ub)) # 20000* NP.ones(features*numbers)#
 
-    x_lb[-1] = 0
-    x_ub[-1] = inf
 
     # No algebraic states
     z_lb = NP.array([])
@@ -165,7 +166,7 @@ def model():
 
     # Bounds on the control inputs. Use "inf" for unconstrained inputs
     u_lb = NP.array([0, 0, 0, 16])
-    u_ub = NP.array([1, 1, 1, 23])
+    u_ub = NP.array([1, 1, 1, 22])
     u0 = NP.array([0, 0, 0, 18])
     # Scaling factors for the states and control inputs. Important if the system is ill-conditioned
     x_scaling = NP.ones(features*numbers)
@@ -173,8 +174,7 @@ def model():
     u_scaling = NP.array([1,1,1,1])
     # Other possibly nonlinear constraints in the form cons(x,u,p) <= cons_ub
     # Define the expresion of the constraint (leave it empty if not necessary)
-    # cons = vertcat(x[features*(numbers-1)]-v[-2], -(x[features*(numbers-1)]-v[-1]))
-    cons = vertcat(x[0]-v[-2], -(x[0]-v[-1]))
+    cons = vertcat(x[features*(numbers-1)]-v[-2], -(x[features*(numbers-1)]-v[-1]))
     # cons = vertcat(x[0], -x[0])
     # Define the lower and upper bounds of the constraint (leave it empty if not necessary)
     cons_ub = NP.array([0, -0])
@@ -182,7 +182,7 @@ def model():
     # Activate if the nonlinear constraints should be implemented as soft constraints
     soft_constraint = 1
     # Penalty term to add in the cost function for the constraints (it should be the same size as cons)
-    penalty_term_cons = NP.array([1e5, 1e5])
+    penalty_term_cons = NP.array([1e6, 1e6])
     # Maximum violation for the constraints
     maximum_violation = 20*NP.array([1, 1])
 
@@ -201,8 +201,8 @@ def model():
     # Define the cost function
     # Lagrange term
     # Mayer term
-    lterm =  3*dx1 + 10*u_rad_OfficesZ1
-    mterm =  3*dx1 + 10*u_rad_OfficesZ1
+    lterm =  0.5*dx1 + 10*u_rad_OfficesZ1
+    mterm =  0.5*dx1 + 10*u_rad_OfficesZ1
     # Penalty term for the control movements 1e4, 100
     rterm = 1* NP.array([5e1, 5e1, 1e4, 20])
     """

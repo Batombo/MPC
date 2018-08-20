@@ -1,0 +1,14 @@
+Co-working			- 3*965 + 2*1447	= 5789
+Corridor			- 965
+Elevator			- 965
+Entrance			- 4*1447			= 5788
+Lab North			- 3*1447			= 4341
+Lab South			- 3*1447			= 4341
+Meeting Room South	- 2*965				= 1930
+Meeting Room North	- 1*1447
+Nerd room 1			- 1*1447
+Nerd room 2			- 1*1447
+Restroom M 			- 1*965
+Restroom W			- 1*965
+Space 01			- 1*1206
+Stairway			- 1*1447
