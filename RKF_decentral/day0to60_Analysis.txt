@@ -1,0 +1,123 @@
+MeetingNorth:
+day 0-20
+	- small fault @ 5450
+	- control looks shit until the half of the day @ day 6 & 13
+		-> maybe decrease 10*u_rad 
+
+day 20-60
+	- control could be better @ day 34, 41, 48
+
+SOLVED
+	
+	
+Coworking:
+day 0-20
+	- the same as 2nd point from MeetingNorth but much better
+day 20-60
+	- looks good
+	
+
+	
+MeetingSouth:
+day 0-20
+	- fault @ 20940 -> increased rterm for u_ahu from 1e4 to 5e4 - error not totally gone but better could be resolved by increasing rterm further but maybe then there is no window opening at all?
+	- same as above
+day 20-60
+	- faults @ 40920-41310, @ 51140-51220, @ 71400, @ 81500-81550
+	- control could be better @ day 41, 42, 48
+	
+SOLVED
+	
+
+	
+Entrace:
+day 0-20
+	- looks good
+day 20-60
+	- control could be better @ day 48, other than that looks good
+	
+SOLVED
+
+
+Corridor:
+day 0-20:
+	- looks like almost over the whole span shit because nearly no Heating (which would be OK for the Corridor but still...)
+	- also there are some faults @6380-6550, @12650, @13540-13860, @15000-15360, @26550-26900, @28100-28400
+day 20-60:
+	- now there is heating but a lot of faults - could be managed by adding u_ahu to cost function
+
+	
+LabNorth:
+day 0-20:
+	- looks good
+day 20-60:
+	- looks good
+	
+	
+LabSouth:
+day 0-20:
+	- looks ok (not as smooth as the others)
+day 20-60
+	- looks ok - heating seems to be reasonable but then there are some unnecessary ahu controls  -> maybe add ahu to cost function
+
+	
+SOLVED (?) First impression looks ok	
+	
+Nerdroom1:
+day 0-20:
+	- though there are some fauls it still looks good
+	- faults @ 4000, @10800-10950, @20880-21110
+		-> maybe add u_ahu to cost function
+day 20-60:
+	- same as the first 20 days
+	- faults @34240, @61150-61400, @69740-69960, @71170-71240
+	
+SOLVED
+	
+Nerdroom2:
+day 0-20:
+	- though there are some fauls it still looks good
+	- faults @10890-10930, @20970-21020
+		-> maybe add u_ahu to cost function
+day 20-60:
+	- same as first 20 days
+	- faults @61300, @65720, @67170, @71210
+	
+SOLVED 
+
+
+RestroomM:
+day 0-20:
+	- looks ok but a bit uncontrolled
+		-> maybe decrease u_rad in cost function - also is here really the need for Heatrate to be in cost function?
+day 20-60:
+	- same as above but not as uncontrolled
+	
+SOLVED	
+	
+RestroomW:
+days 0-20:
+	- fault @760-1050 
+		-> could be solved by adding u_ahu to cost function
+days 20-60:
+	- faults @84100-84500, @85500-86050
+	
+SOLVED
+	
+Space01:
+days 0-20:
+	- looks a lot of the time uncontrolled -> decrease u_rad maybe add u_ahu
+days 20-60:
+	- same as above
+	
+	
+Stairway:
+days 0-20:
+	- has a lot of jitter during the day but besides that it's good
+	- some faults @875-1025, @5450 -> could be solved by adding u_ahu to cost function
+days 20-60:
+	- same as above
+	- look at day 28 -> no control there?
+	- faults @38560, @54250-54320, @63040, @64480
+	
+	

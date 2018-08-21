@@ -263,10 +263,50 @@ def model(zone):
     --------------------------------------------------------------------------
     """
     # Define the cost function
-    lterm = 0.5*dHeatrate + 10*u_rad
-    mterm = 0.5*dHeatrate + 10*u_rad
     # Penalty term for the control movements 1e4, 100
-    rterm = NP.concatenate((1e4*NP.ones(4), 1e4*NP.ones(1), 20*NP.ones(1)))
+    if zone == 'MeetingNorth':
+        lterm = 0.5*dHeatrate + 1*u_rad
+        rterm = NP.concatenate((1e4*NP.ones(4), 1e4*NP.ones(1), 50*NP.ones(1)))
+    elif zone == 'MeetingSouth':
+        lterm = 0.5*dHeatrate + 1*u_rad
+        rterm = NP.concatenate((1e4*NP.ones(4), 5*1e4*NP.ones(1), 50*NP.ones(1)))
+    elif zone == 'Entrance':
+        lterm = 0.5*dHeatrate + 5*u_rad
+        rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
+    elif zone == 'Corridor':
+        lterm = 0.5*dHeatrate + 1*u_rad
+        rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
+    elif zone == 'LabSouth':
+        lterm = 0.5*dHeatrate + 5*u_rad
+        rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
+    elif zone == 'Nerdroom1':
+            lterm = 0.5*dHeatrate + 1*u_rad
+            rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
+    elif zone == 'Nerdroom2':
+            lterm = 0.5*dHeatrate + 1*u_rad
+            rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
+
+    elif zone == 'RestroomM':
+            lterm = 0.5*dHeatrate + 1*u_rad
+            rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
+
+    elif zone == 'RestroomW':
+            lterm = 0.5*dHeatrate + 1*u_rad
+            rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
+
+    elif zone == 'Stairway':
+            lterm = 0.5*dHeatrate + 3*u_rad
+            rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 25*NP.ones(1)))
+
+    elif zone == 'Space01':
+            lterm = 0.5*dHeatrate + 2*u_rad
+            rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 10*NP.ones(1)))
+    else:
+        lterm = 0.5*dHeatrate + 10*u_rad
+        rterm = NP.concatenate((1e4*NP.ones(4), 1e4*NP.ones(1), 20*NP.ones(1)))
+    mterm = lterm
+
+
     """
     --------------------------------------------------------------------------
     template_model: pass information (not necessary to edit)

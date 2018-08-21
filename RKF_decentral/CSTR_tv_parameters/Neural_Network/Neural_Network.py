@@ -8,9 +8,9 @@ import scipy.io as sio
 import numpy as NP
 from pdb import set_trace as bp
 import random
-import pylab as P
+#import pylab as P
 
-from casadi import *
+# from casadi import *
 
 
 
@@ -20,7 +20,7 @@ Training Data Prep
 ----------------------------------------
 """
 
-data = NP.load('60.npy')
+data = NP.load('full.npy')
 load = 0
 save = 1
 trainsize = 1
@@ -33,23 +33,27 @@ x_train = []
 y_train = []
 
 # not all zones have windows or radiators - # NOTE: Elevator is not controlled therefore not in zones list
-zones = ['LabSouth', 'MeetingSouth', 'MeetingNorth']
+zones = ['MeetingNorth', 'Coworking', 'MeetingSouth', 'Entrance', 'Corridor', 'LabNorth', 'LabSouth', 'Nerdroom1', 'Nerdroom2', 'RestroomM', 'RestroomW', 'Space01', 'Stairway']
 
 eastSide = ['Coworking', 'Space01', 'Stairway', 'RestroomW', 'Corridor']
 northSide = ['Coworking', 'MeetingNorth', 'LabNorth']
 southSide = ['Nerdroom2', 'Nerdroom1', 'MeetingSouth', 'LabSouth']
 westSide = ['LabSouth', 'Entrance', 'LabNorth']
 
-ind = 4*5
+ind = 0
 for zone in zones:
     vars()['Heatrate_' + zone] = data[0 + ind,:]/100
     vars()['T_' + zone] = data[1 + ind,:]
     vars()['SchedVal_' + zone] = data[2 + ind,:]
-    vars()['u_AHU_' + zone] = data[3 + ind,:]
+    if zone == 'RestroomM':
+        vars()['u_AHU_' + zone] = 0*data[3 + ind,:]
+    else:
+        vars()['u_AHU_' + zone] = data[3 + ind,:]
     vars()['u_AHU_' + zone][23] = 1e-3
     vars()['v_IG_' + zone] = data[4 + ind,:]
     ind += 5
 
+bp()
 ind = 65
 v_Tamb = data[ind,:]
 
@@ -147,7 +151,7 @@ for zone in zones:
         y_lb = NP.min(y_train,axis =0)
         y_ub = NP.max(y_train,axis =0)
     else:
-        lbub = NP.load('Models\lbub_' + zone + '.npy')
+        lbub = NP.load('Models/lbub_' + zone + '.npy')
         x_lb = lbub[0]
         x_ub = lbub[1]
         y_lb = lbub[2]
@@ -171,12 +175,12 @@ for zone in zones:
     y_train = y_train.astype('float32')
 
     if load == 1:
-        json_file = open('Models\model_' + zone + '.json', 'r')
+        json_file = open('Models/model_' + zone + '.json', 'r')
         model_json = json_file.read()
         json_file.close()
         model = model_from_json(model_json)
         # load weights into new model
-        model.load_weights('Models\model_' + zone +'.h5')
+        model.load_weights('Models/model_' + zone +'.h5')
         y_test = NP.squeeze(y_test)
         y_test = NP.multiply(y_test, y_ub-y_lb) + y_lb
         classes = NP.squeeze(model.predict(x_test))
@@ -223,9 +227,9 @@ for zone in zones:
         trained = model.fit(x_train, y_train, validation_split=0, shuffle = False, epochs=1000, batch_size=1024, verbose = 2)
         if save == 1:
             model_json = model.to_json()
-            with open('Models\model_' + zone + '.json', 'w') as json_file:
+            with open('Models/model_' + zone + '.json', 'w') as json_file:
                 json_file.write(model_json)
             # serialize weights to HDF5
-            model.save_weights('Models\model_' + zone +'.h5')
+            model.save_weights('Models/model_' + zone +'.h5')
             print('Saved model to disk')
-            NP.save('Models\lbub_' + zone + '.npy', [x_lb, x_ub, y_lb, y_ub])
+            NP.save('Models/lbub_' + zone + '.npy', [x_lb, x_ub, y_lb, y_ub])
