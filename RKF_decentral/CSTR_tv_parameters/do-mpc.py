@@ -108,6 +108,7 @@ while (configurations[0].simulator.t0_sim + configurations[0].simulator.t_step_s
         step_index = int(vars()['configuration_' + zone].simulator.t0_sim / vars()['configuration_' + zone].simulator.t_step_simulator)
         v_opt = vars()['configuration_' + zone].optimizer.opt_result_step.optimal_solution
         U_offset = vars()['configuration_' + zone].optimizer.nlp_dict_out['U_offset']
+        # Set the optimal blind position as tv_p for other zones - if simulating the whole model you can replace zones with eastSide, northSide, etc.
         if zone == 'Coworking':
             for k in zones: vars()['configuration_' + k].optimizer.tv_p_values[step_index,-4,:] = NP.squeeze(v_opt[U_offset])
         elif zone == 'MeetingNorth':

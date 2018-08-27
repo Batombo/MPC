@@ -28,21 +28,19 @@ import scipy.io
 from keras.models import model_from_json
 from pdb import set_trace as bp
 from vars import *
-
 def model(zone):
-    lbub = NP.load('Neural_Network\Models\lbub_'+zone+'.npy')
+    lbub = NP.load('Neural_Network\Models\year\lbub_'+zone+'.npy')
     x_lb_NN = lbub[0]
     x_ub_NN = lbub[1]
     y_lb_NN = lbub[2]
     y_ub_NN = lbub[3]
 
-
-    json_file = open('Neural_Network\Models\model_'+zone+'.json', 'r')
+    json_file = open('Neural_Network\Models\year\model_'+zone+'.json', 'r')
     model_json = json_file.read()
     json_file.close()
     model = model_from_json(model_json)
     # load weights into new model
-    model.load_weights('Neural_Network\Models\model_'+zone+'.h5')
+    model.load_weights('Neural_Network\Models\year\model_'+zone+'.h5')
     Theta = {}
     i = 0
     for j in range(len(model.layers)):
@@ -97,7 +95,6 @@ def model(zone):
     template_model: define algebraic and differential equations
     --------------------------------------------------------------------------
     """
-
     if zone == 'Coworking':
         input = vertcat(x, u_blinds_E, u_blinds_N_val, u_blinds_S, u_blinds_W, u[4:], v)
     elif zone == 'Corridor':
@@ -267,12 +264,15 @@ def model(zone):
     if zone == 'MeetingNorth':
         lterm = 0.5*dHeatrate + 1*u_rad
         rterm = NP.concatenate((1e4*NP.ones(4), 1e4*NP.ones(1), 50*NP.ones(1)))
+    elif zone == 'Coworking':
+        lterm = 0.5*dHeatrate + 1*u_rad
+        rterm = NP.concatenate((1e4*NP.ones(4), 1e4*NP.ones(1), 50*NP.ones(1)))
     elif zone == 'MeetingSouth':
         lterm = 0.5*dHeatrate + 1*u_rad
         rterm = NP.concatenate((1e4*NP.ones(4), 5*1e4*NP.ones(1), 50*NP.ones(1)))
     elif zone == 'Entrance':
-        lterm = 0.5*dHeatrate + 5*u_rad
-        rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
+        lterm = 0.5*dHeatrate + 10*u_rad
+        rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 20*NP.ones(1)))
     elif zone == 'Corridor':
         lterm = 0.5*dHeatrate + 1*u_rad
         rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
@@ -280,27 +280,27 @@ def model(zone):
         lterm = 0.5*dHeatrate + 5*u_rad
         rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
     elif zone == 'Nerdroom1':
-            lterm = 0.5*dHeatrate + 1*u_rad
-            rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
+        lterm = 0.5*dHeatrate + 10*u_rad + 2*u_AHU
+        rterm = NP.concatenate((1e4*NP.ones(4), 1*NP.ones(1), 50*NP.ones(1)))
     elif zone == 'Nerdroom2':
-            lterm = 0.5*dHeatrate + 1*u_rad
-            rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
+        lterm = 0.5*dHeatrate + 10*u_rad
+        rterm = NP.concatenate((1e4*NP.ones(4), 1e4*NP.ones(1), 20*NP.ones(1)))
 
     elif zone == 'RestroomM':
-            lterm = 0.5*dHeatrate + 1*u_rad
-            rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
+        lterm = 0.5*dHeatrate + 1*u_rad
+        rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
 
     elif zone == 'RestroomW':
-            lterm = 0.5*dHeatrate + 1*u_rad
-            rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
+        lterm = 0.5*dHeatrate + 1*u_rad
+        rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
 
     elif zone == 'Stairway':
-            lterm = 0.5*dHeatrate + 3*u_rad
-            rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 25*NP.ones(1)))
+        lterm = 0.5*dHeatrate + 3*u_rad
+        rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 25*NP.ones(1)))
 
     elif zone == 'Space01':
-            lterm = 0.5*dHeatrate + 2*u_rad
-            rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 10*NP.ones(1)))
+        lterm = 0.5*dHeatrate + 2*u_rad
+        rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 10*NP.ones(1)))
     else:
         lterm = 0.5*dHeatrate + 10*u_rad
         rterm = NP.concatenate((1e4*NP.ones(4), 1e4*NP.ones(1), 20*NP.ones(1)))

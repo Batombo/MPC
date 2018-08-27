@@ -9406,10 +9406,10 @@ OS:HeatBalanceAlgorithm,
 OS:RunPeriod,
   {19467932-b29d-4f4f-9d3a-2328b2b267c3}, !- Handle
   Run Period 1,                           !- Name
-  1,                                      !- Begin Month
-  1,                                      !- Begin Day of Month
-  1,                                      !- End Month
-  2,                                      !- End Day of Month
+  3,                                      !- Begin Month
+  31,                                     !- Begin Day of Month
+  6,                                      !- End Month
+  21,                                     !- End Day of Month
   ,                                       !- Use Weather File Holidays and Special Days
   ,                                       !- Use Weather File Daylight Saving Period
   ,                                       !- Apply Weekend Holiday Rule
@@ -13909,7 +13909,7 @@ OS:ZoneVentilation:DesignFlowRate,
   0.03636,                                !- Temperature Term Coefficient
   0.1177,                                 !- Velocity Term Coefficient
   0,                                      !- Velocity Squared Term Coefficient
-  25,                                     !- Minimum Indoor Temperature {C}
+  22.1,                                   !- Minimum Indoor Temperature {C}
   ,                                       !- Minimum Indoor Temperature Schedule Name
   100,                                    !- Maximum Indoor Temperature {C}
   ,                                       !- Maximum Indoor Temperature Schedule Name
@@ -13937,7 +13937,7 @@ OS:ZoneVentilation:DesignFlowRate,
   0.03636,                                !- Temperature Term Coefficient
   0.1177,                                 !- Velocity Term Coefficient
   0,                                      !- Velocity Squared Term Coefficient
-  25,                                     !- Minimum Indoor Temperature {C}
+  22.1,                                   !- Minimum Indoor Temperature {C}
   ,                                       !- Minimum Indoor Temperature Schedule Name
   100,                                    !- Maximum Indoor Temperature {C}
   ,                                       !- Maximum Indoor Temperature Schedule Name
@@ -13965,7 +13965,7 @@ OS:ZoneVentilation:DesignFlowRate,
   0.03636,                                !- Temperature Term Coefficient
   0.1177,                                 !- Velocity Term Coefficient
   0,                                      !- Velocity Squared Term Coefficient
-  25,                                     !- Minimum Indoor Temperature {C}
+  22.1,                                   !- Minimum Indoor Temperature {C}
   ,                                       !- Minimum Indoor Temperature Schedule Name
   100,                                    !- Maximum Indoor Temperature {C}
   ,                                       !- Maximum Indoor Temperature Schedule Name
@@ -13993,7 +13993,7 @@ OS:ZoneVentilation:DesignFlowRate,
   0.03636,                                !- Temperature Term Coefficient
   0.1177,                                 !- Velocity Term Coefficient
   0,                                      !- Velocity Squared Term Coefficient
-  25,                                     !- Minimum Indoor Temperature {C}
+  22.1,                                   !- Minimum Indoor Temperature {C}
   ,                                       !- Minimum Indoor Temperature Schedule Name
   100,                                    !- Maximum Indoor Temperature {C}
   ,                                       !- Maximum Indoor Temperature Schedule Name
@@ -14021,7 +14021,7 @@ OS:ZoneVentilation:DesignFlowRate,
   0.03636,                                !- Temperature Term Coefficient
   0.1177,                                 !- Velocity Term Coefficient
   0,                                      !- Velocity Squared Term Coefficient
-  25,                                     !- Minimum Indoor Temperature {C}
+  22.1,                                   !- Minimum Indoor Temperature {C}
   ,                                       !- Minimum Indoor Temperature Schedule Name
   100,                                    !- Maximum Indoor Temperature {C}
   ,                                       !- Maximum Indoor Temperature Schedule Name
@@ -14049,7 +14049,7 @@ OS:ZoneVentilation:DesignFlowRate,
   0.03636,                                !- Temperature Term Coefficient
   0.1177,                                 !- Velocity Term Coefficient
   0,                                      !- Velocity Squared Term Coefficient
-  25,                                     !- Minimum Indoor Temperature {C}
+  22.1,                                   !- Minimum Indoor Temperature {C}
   ,                                       !- Minimum Indoor Temperature Schedule Name
   100,                                    !- Maximum Indoor Temperature {C}
   ,                                       !- Maximum Indoor Temperature Schedule Name
@@ -14077,7 +14077,7 @@ OS:ZoneVentilation:DesignFlowRate,
   0.03636,                                !- Temperature Term Coefficient
   0.1177,                                 !- Velocity Term Coefficient
   0,                                      !- Velocity Squared Term Coefficient
-  25,                                     !- Minimum Indoor Temperature {C}
+  22.1,                                   !- Minimum Indoor Temperature {C}
   ,                                       !- Minimum Indoor Temperature Schedule Name
   100,                                    !- Maximum Indoor Temperature {C}
   ,                                       !- Maximum Indoor Temperature Schedule Name
@@ -14105,7 +14105,7 @@ OS:ZoneVentilation:DesignFlowRate,
   0.03636,                                !- Temperature Term Coefficient
   0.1177,                                 !- Velocity Term Coefficient
   0,                                      !- Velocity Squared Term Coefficient
-  25,                                     !- Minimum Indoor Temperature {C}
+  22.1,                                   !- Minimum Indoor Temperature {C}
   ,                                       !- Minimum Indoor Temperature Schedule Name
   100,                                    !- Maximum Indoor Temperature {C}
   ,                                       !- Maximum Indoor Temperature Schedule Name
@@ -14122,7 +14122,7 @@ OS:ZoneVentilation:DesignFlowRate,
   Natural Ventilation 8,                  !- Name
   {fb9cda77-8f86-4917-9e28-667027e3c8cc}, !- Schedule Name
   Flow/Zone,                              !- Design Flow Rate Calculation Method
-  0.16,                                   !- Design Flow Rate {m3/s}
+  0,                                      !- Design Flow Rate {m3/s}
   0,                                      !- Flow Rate per Zone Floor Area {m3/s-m2}
   0,                                      !- Flow Rate per Person {m3/s-person}
   5,                                      !- Air Changes per Hour {1/hr}
@@ -14133,7 +14133,7 @@ OS:ZoneVentilation:DesignFlowRate,
   0.03636,                                !- Temperature Term Coefficient
   0.1177,                                 !- Velocity Term Coefficient
   0,                                      !- Velocity Squared Term Coefficient
-  25,                                     !- Minimum Indoor Temperature {C}
+  22.1,                                   !- Minimum Indoor Temperature {C}
   ,                                       !- Minimum Indoor Temperature Schedule Name
   100,                                    !- Maximum Indoor Temperature {C}
   ,                                       !- Maximum Indoor Temperature Schedule Name
@@ -14161,7 +14161,7 @@ OS:ZoneVentilation:DesignFlowRate,
   0.03636,                                !- Temperature Term Coefficient
   0.1177,                                 !- Velocity Term Coefficient
   0,                                      !- Velocity Squared Term Coefficient
-  25,                                     !- Minimum Indoor Temperature {C}
+  22.1,                                   !- Minimum Indoor Temperature {C}
   ,                                       !- Minimum Indoor Temperature Schedule Name
   100,                                    !- Maximum Indoor Temperature {C}
   ,                                       !- Maximum Indoor Temperature Schedule Name
@@ -14189,7 +14189,7 @@ OS:ZoneVentilation:DesignFlowRate,
   0.03636,                                !- Temperature Term Coefficient
   0.1177,                                 !- Velocity Term Coefficient
   0,                                      !- Velocity Squared Term Coefficient
-  25,                                     !- Minimum Indoor Temperature {C}
+  22.1,                                   !- Minimum Indoor Temperature {C}
   ,                                       !- Minimum Indoor Temperature Schedule Name
   100,                                    !- Maximum Indoor Temperature {C}
   ,                                       !- Maximum Indoor Temperature Schedule Name
@@ -14245,7 +14245,7 @@ OS:ZoneVentilation:DesignFlowRate,
   0.03636,                                !- Temperature Term Coefficient
   0.1177,                                 !- Velocity Term Coefficient
   0,                                      !- Velocity Squared Term Coefficient
-  25,                                     !- Minimum Indoor Temperature {C}
+  22.1,                                   !- Minimum Indoor Temperature {C}
   ,                                       !- Minimum Indoor Temperature Schedule Name
   100,                                    !- Maximum Indoor Temperature {C}
   ,                                       !- Maximum Indoor Temperature Schedule Name

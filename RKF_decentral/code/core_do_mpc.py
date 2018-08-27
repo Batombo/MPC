@@ -239,6 +239,7 @@ class configuration:
         start_time = time.time()
         solver = nlpsol("solver", self.optimizer.nlp_solver, nlp_dict_out['nlp_fcn'], opts)
         elapsed_time = time.time() - start_time
+        print elapsed_time
         arg = {}
         # Initial condition
         arg["x0"] = nlp_dict_out['vars_init']
@@ -315,7 +316,7 @@ class configuration:
         self.simulator.tf_sim = self.simulator.tf_sim + self.simulator.t_step_simulator
 
     def step_simulator(self, model_fmu, simTime, secStep):
-        bp()
+
         lbub = NP.load('Neural_Network\lbub.npy')
         x_lb_NN = lbub[0]
         x_ub_NN = lbub[1]
