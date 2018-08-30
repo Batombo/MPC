@@ -93,10 +93,12 @@ def plot_mpc(configuration):
     mpc_data = configuration.mpc_data
     mpc_states = mpc_data.mpc_states
     mpc_control = mpc_data.mpc_control
+    mpc_tv_p = configuration.optimizer.tv_p_values
     mpc_time = mpc_data.mpc_time
     index_mpc = configuration.simulator.mpc_iteration
     plot_states = configuration.simulator.plot_states
     plot_control = configuration.simulator.plot_control
+    plot_tv_p = configuration.simulator.plot_tv_p
     x = configuration.model.x
     x_scaling = configuration.model.ocp.x_scaling
     u = configuration.model.u
@@ -110,12 +112,15 @@ def plot_mpc(configuration):
     fig = plt.figure(1)
     # Clear the previous animation
     plt.clf()
-    total_subplots = len(plot_states) + len(plot_control) + 2
+    total_subplots = len(plot_states) + len(plot_control) + len(plot_tv_p) + 2
     # First plot the states
     for index in range(len(plot_states)):
     	plot = plt.subplot(total_subplots, 1, index + 1)
     	plt.plot(mpc_time[0:index_mpc], mpc_states[0:index_mpc,plot_states[index]] * x_scaling[plot_states[index]])
-    	plt.ylabel(str(x[plot_states[index]]))
+        if plot_states[index] == 0:
+            plt.ylabel('Temperature [$\degree$C]')
+        else:
+    	       plt.ylabel(str(x[plot_states[index]]))
     	plt.xlabel("Time")
     	plt.grid()
     	plot.yaxis.set_major_locator(MaxNLocator(4))
@@ -139,11 +144,37 @@ def plot_mpc(configuration):
     axes = plt.gca()
     axes.set_xlim([mpc_time[0]-5,mpc_time[-1]+10*10])
 
+
+    # Plot the time varying parameters
+    for index in range(len(plot_tv_p)):
+        plot = plt.subplot(total_subplots, 1, len(plot_states) + 1 + index + 2)
+        plt.plot(mpc_time[0:index_mpc], mpc_tv_p[0:index_mpc,plot_tv_p[index],0])
+        if plot_tv_p[index] == -4:
+            plt.ylabel('Blind East []')
+        elif plot_tv_p[index] == -3:
+            plt.ylabel('Blind North []')
+        elif plot_tv_p[index] == -2:
+            plt.ylabel('Blind South []')
+        elif plot_tv_p[index] == -1:
+            plt.ylabel('Blind West []')
+        plt.xlabel("Time")
+        plt.grid()
+        axes = plt.gca()
+        axes.set_xlim([mpc_time[0]-5,mpc_time[-1]+10*10])
+        plot.yaxis.set_major_locator(MaxNLocator(4))
+
     # Plot the control inputs
     for index in range(len(plot_control)):
-    	plot = plt.subplot(total_subplots, 1, len(plot_states) + index + 1 + 2)
+    	plot = plt.subplot(total_subplots, 1, len(plot_states) + len(plot_tv_p) + index + 1 + 2)
     	plt.plot(mpc_time[0:index_mpc], mpc_control[0:index_mpc,plot_control[index]] * u_scaling[plot_control[index]] ,drawstyle='steps')
-    	plt.ylabel(str(u[plot_control[index]]))
+        if plot_control[index] <= 3:
+            plt.ylabel('Blind Position []')
+        elif plot_control[index] == 4:
+            plt.ylabel('Window Opening [%]')
+        elif plot_control[index] == 5:
+            plt.ylabel('Setpoint [$\degree$C]')
+        else:
+            plt.ylabel(str(u[plot_control[index]]))
     	plt.xlabel("Time")
     	plt.grid()
     	plot.yaxis.set_major_locator(MaxNLocator(4))
@@ -206,10 +237,12 @@ def plot_animation(configuration):
         mpc_data = configuration.mpc_data
         mpc_states = mpc_data.mpc_states
         mpc_control = mpc_data.mpc_control
+        mpc_tv_p = configuration.optimizer.tv_p_values
         mpc_time = mpc_data.mpc_time
         index_mpc = configuration.simulator.mpc_iteration
         plot_states = configuration.simulator.plot_states
         plot_control = configuration.simulator.plot_control
+        plot_tv_p = configuration.simulator.plot_tv_p
         x = configuration.model.x
         x_scaling = configuration.model.ocp.x_scaling
         u = configuration.model.u
@@ -230,7 +263,7 @@ def plot_animation(configuration):
         Heatrate = NP.transpose(configuration.simulator.Heatrate)
 
         plt.ion()
-        total_subplots = len(plot_states) + len(plot_control) + 1
+        total_subplots = len(plot_states) + len(plot_control) + len(plot_tv_p) + 1
         plt.figure(2)
         # Clear the previous animation
         plt.clf()
@@ -240,7 +273,10 @@ def plot_animation(configuration):
 	        # First plot the prediction
             plot_state_pred(v_opt, t0, plot_states[index], '-b', n_scenarios, n_branches, nk, child_scenario, X_offset, x_scaling, t_step)
             plt.plot(mpc_time[0:index_mpc], mpc_states[0:index_mpc,plot_states[index]] * x_scaling[plot_states[index]], '-k', linewidth=2.0)
-            plt.ylabel(str(x[plot_states[index]]))
+            if plot_states[index] == 0:
+                plt.ylabel('Temperature [$\degree$C]')
+            else:
+                plt.ylabel(str(x[plot_states[index]]))
             plt.xlabel("Time")
             plt.grid()
             plot.yaxis.set_major_locator(MaxNLocator(4))
@@ -254,13 +290,39 @@ def plot_animation(configuration):
         plt.grid()
         axes = plt.gca()
         axes.set_xlim([mpc_time[0]-5,mpc_time[-1]+10*10])
+
+        # Plot the time varying parameters
+        for index in range(len(plot_tv_p)):
+            plot = plt.subplot(total_subplots, 1, len(plot_states) + 1 + index + 1)
+            plt.plot(mpc_time[0:index_mpc], mpc_tv_p[0:index_mpc,plot_tv_p[index],0],'-k', linewidth=2.0)
+            if plot_tv_p[index] == -4:
+                plt.ylabel('Blind East []')
+            elif plot_tv_p[index] == -3:
+                plt.ylabel('Blind North []')
+            elif plot_tv_p[index] == -2:
+                plt.ylabel('Blind South []')
+            elif plot_tv_p[index] == -1:
+                plt.ylabel('Blind West []')
+            plt.xlabel("Time")
+            plt.grid()
+            axes = plt.gca()
+            axes.set_xlim([mpc_time[0]-5,mpc_time[-1]+10*10])
+            plot.yaxis.set_major_locator(MaxNLocator(4))
+
         # Plot the control inputs
         for index in range(len(plot_control)):
-            plot = plt.subplot(total_subplots, 1, len(plot_states) + index + 1 +1)
+            plot = plt.subplot(total_subplots, 1, len(plot_states) + 1 + len(plot_tv_p) + index + 1)
         	# First plot the prediction
             plot_control_pred(v_opt, t0, plot_control[index], '-b', n_scenarios, n_branches, nk, parent_scenario, U_offset, u_scaling, t_step, mpc_control[index_mpc-1,plot_control[index]])
             plt.plot(mpc_time[0:index_mpc], mpc_control[0:index_mpc,plot_control[index]] * u_scaling[plot_control[index]],'-k' ,drawstyle='steps', linewidth=2.0)
-            plt.ylabel(str(u[plot_control[index]]))
+            if plot_control[index] <= 3:
+                plt.ylabel('Blind Position []')
+            elif plot_control[index] == 4:
+                plt.ylabel('Window Opening [%]')
+            elif plot_control[index] == 5:
+                plt.ylabel('Setpoint [$\degree$C]')
+            else:
+                plt.ylabel(str(u[plot_control[index]]))
             plt.xlabel("Time")
             plt.grid()
             plot.yaxis.set_major_locator(MaxNLocator(4))

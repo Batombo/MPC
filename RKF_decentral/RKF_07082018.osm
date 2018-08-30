@@ -5234,17 +5234,17 @@ OS:Construction,
 
 OS:Site,
   {67954095-e568-4057-a467-6d726fa7832a}, !- Handle
-  BERLIN,                                 !- Name
-  52.47,                                  !- Latitude {deg}
-  13.4,                                   !- Longitude {deg}
+  Potsdam,                                !- Name
+  52.383,                                 !- Latitude {deg}
+  13.066,                                 !- Longitude {deg}
   1,                                      !- Time Zone {hr}
-  49,                                     !- Elevation {m}
+  81,                                     !- Elevation {m}
   ;                                       !- Terrain
 
 OS:YearDescription,
   {ced9d852-3dbd-4e6c-ade7-1e572711c3f2}, !- Handle
   ,                                       !- Calendar Year
-  Sunday,                                 !- Day of Week for Start Day
+  Monday,                                 !- Day of Week for Start Day
   ;                                       !- Is Leap Year
 
 OS:ClimateZones,
@@ -9406,10 +9406,10 @@ OS:HeatBalanceAlgorithm,
 OS:RunPeriod,
   {19467932-b29d-4f4f-9d3a-2328b2b267c3}, !- Handle
   Run Period 1,                           !- Name
-  3,                                      !- Begin Month
-  31,                                     !- Begin Day of Month
-  6,                                      !- End Month
-  21,                                     !- End Day of Month
+  1,                                      !- Begin Month
+  1,                                      !- Begin Day of Month
+  1,                                      !- End Month
+  31,                                     !- End Day of Month
   ,                                       !- Use Weather File Holidays and Special Days
   ,                                       !- Use Weather File Daylight Saving Period
   ,                                       !- Apply Weekend Holiday Rule
@@ -9423,17 +9423,17 @@ OS:StandardsInformation:Material,
 
 OS:WeatherFile,
   {b6ed184f-52ff-4e6c-ae6a-d8f8e4a520f4}, !- Handle
-  BERLIN,                                 !- City
-  -,                                      !- State Province Region
+  Potsdam,                                !- City
+  BB,                                     !- State Province Region
   DEU,                                    !- Country
-  IWEC Data,                              !- Data Source
-  103840,                                 !- WMO Number
-  52.47,                                  !- Latitude {deg}
-  13.4,                                   !- Longitude {deg}
+  BBSR,                                   !- Data Source
+  103790,                                 !- WMO Number
+  52.383,                                 !- Latitude {deg}
+  13.066,                                 !- Longitude {deg}
   1,                                      !- Time Zone {hr}
-  49,                                     !- Elevation {m}
-  file:Berlin.epw,                        !- Url
-  9A610602;                               !- Checksum
+  81,                                     !- Elevation {m}
+  file:Potsdam.epw,                       !- Url
+  ADF9517D;                               !- Checksum
 
 OS:SizingPeriod:DesignDay,
   {e4ebe8f4-2b86-4a1b-bdc4-822193889f4e}, !- Handle

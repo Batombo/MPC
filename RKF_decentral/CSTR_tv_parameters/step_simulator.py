@@ -16,7 +16,11 @@ def step_simulator(model_fmu, simTime, secStep, configurations):
 
     u_mpc = NP.resize(NP.array([]),(len(configurations),6))
     tmp = NP.zeros(4)
+    # Retrieve blind values from master zones
     for i in range(len(configurations)):
+        # Allow only [0.1, 0.2,... 1.0] values for windows
+        configurations[i].optimizer.u_mpc[4] = NP.floor(configurations[i].optimizer.u_mpc[4]*10)/10
+
         u_mpc[i,:] = configurations[i].optimizer.u_mpc
 
         if configurations[i].model.name == 'Coworking':
@@ -27,6 +31,8 @@ def step_simulator(model_fmu, simTime, secStep, configurations):
             tmp[2] = configurations[i].optimizer.u_mpc[2]
         elif configurations[i].model.name == 'Entrance':
             tmp[3] = configurations[i].optimizer.u_mpc[3]
+
+
     # Blinds
     tmp = NP.round(tmp)
     model_fmu.set('u_blinds_E', tmp[0])
@@ -36,7 +42,7 @@ def step_simulator(model_fmu, simTime, secStep, configurations):
 
     for i in range(len(configurations)):
         # AHU
-        u_mpc[i,4] = NP.floor(u_mpc[i,4]*10)/10
+        # u_mpc[i,4] = NP.floor(u_mpc[i,4]*10)/10
         model_fmu.set('u_AHU_' + zones[i], u_mpc[i,4])
         # Baseboard Heaters
         model_fmu.set('u_rad_' + zones[i], u_mpc[i,5])
@@ -69,13 +75,14 @@ def step_simulator(model_fmu, simTime, secStep, configurations):
         states.append(model_fmu.get('T_' + zones[i]))
         blinds = [0,0,0,0]
         if zones[i] in eastSide:
-            blinds[0] = tmp[0]
+            blinds[0] = int(tmp[0])
         if zones[i] in northSide:
-            blinds[1] = tmp[1]
+            blinds[1] = int(tmp[1])
         if zones[i] in southSide:
-            blinds[2] = tmp[2]
+            blinds[2] = int(tmp[2])
         if zones[i] in westSide:
-            blinds[3] = tmp[3]
+            blinds[3] = int(tmp[3])
+
         for k in range(0,len(blinds)): states.append(NP.asarray([blinds[k]]))
 
         states.append(NP.asarray([u_mpc[i,4]]))
@@ -83,7 +90,14 @@ def step_simulator(model_fmu, simTime, secStep, configurations):
         states.append(model_fmu.get('v_IG_' + zones[i]))
         for k in range(0,len(states_all)): states.append(states_all[k])
         states = NP.squeeze(states)
-        
+
+        diff = NP.zeros((1,1))
+        step_index = int(configurations[i].simulator.t0_sim / configurations[i].simulator.t_step_simulator)
+        if states[0] < configurations[i].optimizer.tv_p_values[step_index,-5,0]:
+            diff = NP.resize(NP.abs(states[0] - configurations[i].optimizer.tv_p_values[step_index,-5,0]),(1,1))
+        elif states[0] >  configurations[i].optimizer.tv_p_values[step_index,-6,0]:
+            diff = NP.resize(NP.abs(states[0] - configurations[i].optimizer.tv_p_values[step_index,-6,0]),(1,1))
+        configurations[i].simulator.unmetHours = NP.concatenate((configurations[i].simulator.unmetHours, diff), axis = 1)
         # close loop for all configurations
         configurations[i].simulator.xf_sim = states
         # Update the initial condition for the next iteration
@@ -166,8 +180,8 @@ def compare(model_fmu, simTime, secStep, configurations):
         for j in range(0,duration):
             u_mpc = configurations[i].optimizer.u_mpc
             u_mpc = NP.asarray(u_mpc, dtype=NP.float32)
-            u_mpc[5] = float(f_const(j)) #np.round(np.random.normal(17,0.1,1),2)
-            u_mpc[1] = 1
+            u_mpc[5] = 16#float(f_const(j)) #np.round(np.random.normal(17,0.1,1),2)
+            u_mpc[1] = 0
             tv_p_real = configurations[i].simulator.tv_p_real_now(configurations[i].simulator.t0_sim)
             rhs_unscaled = substitute(configurations[i].model.rhs, configurations[i].model.x, configurations[i].model.x * configurations[i].model.ocp.x_scaling)/configurations[i].model.ocp.x_scaling
             rhs_unscaled = substitute(rhs_unscaled, configurations[i].model.u, configurations[i].model.u * configurations[i].model.ocp.u_scaling)
@@ -184,8 +198,8 @@ def compare(model_fmu, simTime, secStep, configurations):
     for j in range(0,duration):
         u_mpc = configurations[0].optimizer.u_mpc
         u_mpc = NP.asarray(u_mpc, dtype=NP.float32)
-        u_mpc[5] = float(f_const(j)) #np.round(np.random.normal(17,0.1,1),2)
-        u_mpc[1] = 1
+        u_mpc[5] = 16#float(f_const(j)) #np.round(np.random.normal(17,0.1,1),2)
+        u_mpc[1] = 0
         """
         Blinds
         """
@@ -231,6 +245,7 @@ def compare(model_fmu, simTime, secStep, configurations):
             for k in range(4,len(states_all)): states.append(states_all[k])
             states = NP.squeeze(states)
             vars()['result_Ep_' + zones[i]][j,:] = states
+
 
         simTime += secStep
         sched[j,:] = u_mpc

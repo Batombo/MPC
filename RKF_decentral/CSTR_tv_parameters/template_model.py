@@ -203,8 +203,8 @@ def model(zone):
     disturbances_lb = NP.min(disturbances,axis =1)
     disturbances_ub = NP.max(disturbances,axis =1)
 
-    x_lb = NP.concatenate((NP.array([x_lb_NN[0]]), NP.array([0,0,0,0,0,16]) - 1e-2, NP.array([disturbances_lb[zonenumber[zone]]]) ,disturbances_lb[len(zones_Heating):]))
-    x_ub = NP.concatenate((NP.array([x_ub_NN[0]]), NP.array([1,1,1,1,1,22]) + 1e-2, NP.array([disturbances_ub[zonenumber[zone]]]) ,disturbances_ub[len(zones_Heating):]))
+    x_lb = NP.concatenate((NP.array([x_lb_NN[0]]), NP.array([0,0,0,0,0,16]) - 1e-1, NP.array([disturbances_lb[zonenumber[zone]]]) ,disturbances_lb[len(zones_Heating):]))
+    x_ub = NP.concatenate((NP.array([x_ub_NN[0]]), NP.array([1,1,1,1,1,22]) + 1e-1, NP.array([disturbances_ub[zonenumber[zone]]]) ,disturbances_ub[len(zones_Heating):]))
     # No algebraic states
     z_lb = NP.array([])
     z_ub = NP.array([])
@@ -243,9 +243,9 @@ def model(zone):
     # Activate if the nonlinear constraints should be implemented as soft constraints
     soft_constraint = 1
     # Penalty term to add in the cost function for the constraints (it should be the same size as cons)
-    penalty_term_cons = 1e6*NP.ones(2)
+    penalty_term_cons = 1e5*NP.ones(2)
     # Maximum violation for the constraints
-    maximum_violation = NP.array([20,2])
+    maximum_violation = NP.array([20,0])
 
     # Define the terminal constraint (leave it empty if not necessary)
     cons_terminal = vertcat()
@@ -280,11 +280,11 @@ def model(zone):
         lterm = 0.5*dHeatrate + 5*u_rad
         rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
     elif zone == 'Nerdroom1':
-        lterm = 0.5*dHeatrate + 10*u_rad + 2*u_AHU
-        rterm = NP.concatenate((1e4*NP.ones(4), 1*NP.ones(1), 50*NP.ones(1)))
+        lterm = 0.5*dHeatrate + 1*u_rad
+        rterm = NP.concatenate((1e4*NP.ones(4), 1e4*NP.ones(1), 50*NP.ones(1)))
     elif zone == 'Nerdroom2':
-        lterm = 0.5*dHeatrate + 10*u_rad
-        rterm = NP.concatenate((1e4*NP.ones(4), 1e4*NP.ones(1), 20*NP.ones(1)))
+        lterm = 0.5*dHeatrate + 1*u_rad
+        rterm = NP.concatenate((1e4*NP.ones(4), 1e4*NP.ones(1), 50*NP.ones(1)))
 
     elif zone == 'RestroomM':
         lterm = 0.5*dHeatrate + 1*u_rad

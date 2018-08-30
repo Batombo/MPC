@@ -113,7 +113,7 @@ class simulator:
     """A class for the definition model equations and optimal control problem formulation"""
     def __init__(self, model_simulator, param_dict, *opt):
         # Assert for define length of param_dict
-        required_dimension = 10
+        required_dimension = 11
         if not (len(param_dict) == required_dimension): raise Exception("Simulator information is incomplete. The number of elements in the dictionary is not correct")
         # Unscale the states on the rhs
         rhs_unscaled = substitute(model_simulator.rhs, model_simulator.x, model_simulator.x * model_simulator.ocp.x_scaling)/model_simulator.ocp.x_scaling
@@ -132,6 +132,7 @@ class simulator:
         self.simulator = simulator_do_mpc
         self.plot_states = param_dict["plot_states"]
         self.plot_control = param_dict["plot_control"]
+        self.plot_tv_p = param_dict["plot_tv_p"]
         self.plot_anim = param_dict["plot_anim"]
         self.export_to_matlab = param_dict["export_to_matlab"]
         self.export_name = param_dict["export_name"]
@@ -148,6 +149,7 @@ class simulator:
         # Store Heatrate used in Energpylus
         self.Heatrate = 0*NP.ones((1,1))
         self.faultDetector = 0*NP.ones((1,1))
+        self.unmetHours = 0*NP.ones((1,1))
     @classmethod
     def user_simulator(cls, param_dict, *opt):
         " This is open for the implementation of a user-defined simulator class"
@@ -232,7 +234,7 @@ class configuration:
         #NOTE: this could be passed as parameters of the optimizer class
         opts["ipopt.max_iter"] = 500
         opts["ipopt.tol"] = 1e-6
-        opts["ipopt.print_level"] = 5
+        opts["ipopt.print_level"] = 0
         # Setup the solver
         opts["print_time"] = False
 

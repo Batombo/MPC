@@ -77,7 +77,17 @@ def simulator(model, zonenumber):
     # Choose the indices of the states to plot
     plot_states = [0]
     # Choose the indices of the controls to plot
-    plot_control = [1,4,5]
+    if model.name in eastSide:
+        plot_tv_p = [-4]
+    elif model.name in northSide:
+        plot_tv_p = [-3]
+    elif model.name in southSide:
+        plot_tv_p = [-2]
+    else:
+        plot_tv_p = [-1]
+
+    plot_control = [4,5]
+
     # Plot animation (False or True)
     plot_anim = False
     # Export to matlab (for better plotting or postprocessing)
@@ -90,7 +100,7 @@ def simulator(model, zonenumber):
     --------------------------------------------------------------------------
     """
 
-    simulator_dict = {'integration_tool':integration_tool,'plot_states':plot_states,
+    simulator_dict = {'integration_tool':integration_tool,'plot_states':plot_states, 'plot_tv_p':plot_tv_p,
     'plot_control': plot_control,'plot_anim': plot_anim,'export_to_matlab': export_to_matlab,'export_name': export_name, 'p_real_now':p_real_now, 't_step_simulator': t_step_simulator, 'integrator_opts': opts, 'tv_p_real_now':tv_p_real_now}
 
     simulator_1 = core_do_mpc.simulator(model, simulator_dict)

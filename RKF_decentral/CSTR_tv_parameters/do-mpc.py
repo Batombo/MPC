@@ -101,7 +101,7 @@ while (configurations[0].simulator.t0_sim + configurations[0].simulator.t_step_s
     do-mpc: Optimizer
     ----------------------------
     """
-    ## Make one optimizer step (solve the NLP)
+    # Make one optimizer step (solve the NLP)
     for zone in zones:
         vars()['configuration_' + zone].make_step_optimizer()
 
@@ -110,14 +110,14 @@ while (configurations[0].simulator.t0_sim + configurations[0].simulator.t_step_s
         U_offset = vars()['configuration_' + zone].optimizer.nlp_dict_out['U_offset']
         # Set the optimal blind position as tv_p for other zones - if simulating the whole model you can replace zones with eastSide, northSide, etc.
         if zone == 'Coworking':
-            for k in zones: vars()['configuration_' + k].optimizer.tv_p_values[step_index,-4,:] = NP.squeeze(v_opt[U_offset])
+            for k in zones: vars()['configuration_' + k].optimizer.tv_p_values[step_index,-4,:] = NP.round(NP.squeeze(v_opt[U_offset]))
         elif zone == 'MeetingNorth':
-            for k in zones: vars()['configuration_' + k].optimizer.tv_p_values[step_index,-3,:] = NP.squeeze(v_opt[U_offset + 1])
+            for k in zones: vars()['configuration_' + k].optimizer.tv_p_values[step_index,-3,:] = NP.round(NP.squeeze(v_opt[U_offset + 1]))
         elif zone == 'MeetingSouth':
-            for k in zones: vars()['configuration_' + k].optimizer.tv_p_values[step_index,-2,:] = NP.squeeze(v_opt[U_offset + 2])
+            for k in zones: vars()['configuration_' + k].optimizer.tv_p_values[step_index,-2,:] = NP.round(NP.squeeze(v_opt[U_offset + 2]))
         elif zone == 'Entrance':
-            for k in zones: vars()['configuration_' + k].optimizer.tv_p_values[step_index,-1,:] = NP.squeeze(v_opt[U_offset + 3])
-        print vars()['configuration_' + zone].optimizer.tv_p_values[step_index,-7:-4,:]
+            for k in zones: vars()['configuration_' + k].optimizer.tv_p_values[step_index,-1,:] = NP.round(NP.squeeze(v_opt[U_offset + 3]))
+        # print vars()['configuration_' + zone].optimizer.tv_p_values[step_index,-7:-4,:]
     """
     ----------------------------
     do-mpc: Simulator
