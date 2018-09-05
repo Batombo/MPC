@@ -29,6 +29,7 @@ from matplotlib.ticker import MaxNLocator
 import scipy.io
 import pdb
 from pdb import set_trace as bp
+import time
 
 import pickle as pl
 from vars import *
@@ -107,6 +108,7 @@ def plot_mpc(configuration):
     Heatrate = NP.transpose(configuration.simulator.Heatrate)
     faultDetector = NP.transpose(configuration.simulator.faultDetector)
     name = configuration.model.name
+    s = int(configuration.simulator.t0_sim / configuration.simulator.t_step_simulator)
 
     plt.ion()
     fig = plt.figure(1)
@@ -148,7 +150,8 @@ def plot_mpc(configuration):
     # Plot the time varying parameters
     for index in range(len(plot_tv_p)):
         plot = plt.subplot(total_subplots, 1, len(plot_states) + 1 + index + 2)
-        plt.plot(mpc_time[0:index_mpc], mpc_tv_p[0:index_mpc,plot_tv_p[index],0])
+        plt.plot(mpc_time[0:index_mpc], mpc_tv_p[s-index_mpc:s,plot_tv_p[index],0])
+
         if plot_tv_p[index] == -4:
             plt.ylabel('Blind East []')
         elif plot_tv_p[index] == -3:
@@ -258,7 +261,7 @@ def plot_animation(configuration):
         t_step = configuration.simulator.t_step_simulator
         v_opt = configuration.optimizer.opt_result_step.optimal_solution
         name = configuration.model.name
-
+        s = int(configuration.simulator.t0_sim / configuration.simulator.t_step_simulator)
 
         Heatrate = NP.transpose(configuration.simulator.Heatrate)
 
@@ -294,7 +297,7 @@ def plot_animation(configuration):
         # Plot the time varying parameters
         for index in range(len(plot_tv_p)):
             plot = plt.subplot(total_subplots, 1, len(plot_states) + 1 + index + 1)
-            plt.plot(mpc_time[0:index_mpc], mpc_tv_p[0:index_mpc,plot_tv_p[index],0],'-k', linewidth=2.0)
+            plt.plot(mpc_time[0:index_mpc], mpc_tv_p[s-index_mpc:s,plot_tv_p[index],0],'-k', linewidth=2.0)
             if plot_tv_p[index] == -4:
                 plt.ylabel('Blind East []')
             elif plot_tv_p[index] == -3:

@@ -95,7 +95,7 @@ do-mpc: MPC loop
 start_time = time.time()
 while (configurations[0].simulator.t0_sim + configurations[0].simulator.t_step_simulator < configurations[0].optimizer.t_end):
 
-
+# int(configurations.simulator.t0_sim / configurations.simulator.t_step_simulator)
     """
     ----------------------------
     do-mpc: Optimizer

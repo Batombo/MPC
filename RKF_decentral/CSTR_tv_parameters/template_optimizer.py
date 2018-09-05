@@ -28,6 +28,10 @@ from pdb import set_trace as bp
 from vars import *
 
 def createConstraints(model, ub_night, lb_night, ub_day, lb_day, dist_len):
+    if model.name == 'Coworking':
+        overlap = 8
+    else:
+        overlap = 10
     daycount = 0
     constraints = NP.zeros((3,dist_len))
     for index in range (dist_len):
@@ -37,11 +41,11 @@ def createConstraints(model, ub_night, lb_night, ub_day, lb_day, dist_len):
             constraints[0, index] = 0
             constraints[1, index] = ub_night
             constraints[2, index] = lb_night
-        elif index - daycount*144 < 7*(EPTimeStep) + 8:
+        elif index - daycount*144 < 7*(EPTimeStep) + overlap:
             constraints[0, index] = 0
             constraints[1, index] = ub_day
             constraints[2, index] = lb_night
-        elif index - daycount*144 > 20*EPTimeStep - 8:
+        elif index - daycount*144 > 20*EPTimeStep - overlap:
             constraints[0, index] = 0
             constraints[1, index] = ub_day
             constraints[2, index] = lb_night

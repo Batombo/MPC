@@ -89,7 +89,7 @@ def simulator(model, zonenumber):
     plot_control = [4,5]
 
     # Plot animation (False or True)
-    plot_anim = False
+    plot_anim = True
     # Export to matlab (for better plotting or postprocessing)
     export_to_matlab = False
     export_name = "mpc_result.mat"  # Change this name if desired

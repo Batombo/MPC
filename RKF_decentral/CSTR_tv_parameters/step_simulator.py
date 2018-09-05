@@ -40,6 +40,10 @@ def step_simulator(model_fmu, simTime, secStep, configurations):
     model_fmu.set('u_blinds_S', tmp[2])
     model_fmu.set('u_blinds_W', tmp[3])
 
+    ## DEBUG: set all unused_zones to 20 degree
+    for u in unused_zones:
+        model_fmu.set('u_rad_'+u, 20)
+
     for i in range(len(configurations)):
         # AHU
         # u_mpc[i,4] = NP.floor(u_mpc[i,4]*10)/10

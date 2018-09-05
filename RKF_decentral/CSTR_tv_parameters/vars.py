@@ -8,7 +8,7 @@ numSteps = days*hours*EPTimeStep
 # daystart =  86400*140/60
 daystart =  86400*0/60
 
-imagefile = 'test.pickle'
+imagefile = 'a.pickle'
 
 # features = 16
 # numbers = 1
@@ -17,7 +17,7 @@ imagefile = 'test.pickle'
 # not all zones have windows or radiators
 zones_Heating = ['Coworking', 'Corridor', 'Entrance', 'LabNorth', 'LabSouth', 'MeetingSouth', 'MeetingNorth', 'Nerdroom1', 'Nerdroom2', 'RestroomM', 'RestroomW', 'Space01', 'Stairway']
 # zones = ['Corridor']#, 'MeetingSouth', 'Entrance', 'RestroomM']# 'Space01', 'Stairway']
-
+unused_zones = ['MeetingNorth', 'Coworking', 'MeetingSouth', 'Entrance', 'Corridor', 'LabNorth', 'LabSouth', 'Nerdroom1', 'Nerdroom2', 'RestroomM', 'RestroomW', 'Space01', 'Stairway']
 zones = ['MeetingNorth', 'Coworking', 'MeetingSouth', 'Entrance', 'Corridor', 'LabNorth', 'LabSouth', 'Nerdroom1', 'Nerdroom2', 'RestroomM', 'RestroomW', 'Space01', 'Stairway']
 
 zonenumber = {'Coworking':0, 'Corridor':1, 'Entrance':2, 'LabNorth':3, 'LabSouth':4, 'MeetingSouth':5, 'MeetingNorth':6, 'Nerdroom1':7, 'Nerdroom2':8, 'RestroomM':9 ,'RestroomW':10, 'Space01':11, 'Stairway':12}

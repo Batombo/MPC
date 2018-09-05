@@ -203,14 +203,14 @@ def model(zone):
     disturbances_lb = NP.min(disturbances,axis =1)
     disturbances_ub = NP.max(disturbances,axis =1)
 
-    x_lb = NP.concatenate((NP.array([x_lb_NN[0]]), NP.array([0,0,0,0,0,16]) - 1e-1, NP.array([disturbances_lb[zonenumber[zone]]]) ,disturbances_lb[len(zones_Heating):]))
-    x_ub = NP.concatenate((NP.array([x_ub_NN[0]]), NP.array([1,1,1,1,1,22]) + 1e-1, NP.array([disturbances_ub[zonenumber[zone]]]) ,disturbances_ub[len(zones_Heating):]))
+    x_lb = NP.concatenate((NP.array([x_lb_NN[0]]), NP.array([0,0,0,0,0,17]) - 1e-1, NP.array([disturbances_lb[zonenumber[zone]]]) ,disturbances_lb[len(zones_Heating):])) #- 1e-1
+    x_ub = NP.concatenate((NP.array([x_ub_NN[0]]), NP.array([1,1,1,1,1,22]) + 1e-1, NP.array([disturbances_ub[zonenumber[zone]]]) ,disturbances_ub[len(zones_Heating):])) #+ 1e-1
     # No algebraic states
     z_lb = NP.array([])
     z_ub = NP.array([])
 
     # Bounds on the control inputs. Use "inf" for unconstrained inputs
-    u_lb = NP.array([0,0,0,0,0,16])
+    u_lb = NP.array([0,0,0,0,0,17])
     u_ub = NP.array([0,0,0,0,1,22])
 
     if zone == 'Coworking':
@@ -243,9 +243,18 @@ def model(zone):
     # Activate if the nonlinear constraints should be implemented as soft constraints
     soft_constraint = 1
     # Penalty term to add in the cost function for the constraints (it should be the same size as cons)
-    penalty_term_cons = 1e5*NP.ones(2)
+    if zone == 'LabSouth':
+        penalty_term_cons = 5e5*NP.ones(2)
+    elif zone == 'Entrance':
+        penalty_term_cons = 5e5*NP.ones(2)
+    elif zone == 'RestroomM':
+        penalty_term_cons = 5e5*NP.ones(2)
+    elif zone == 'MeetingSouth':
+        penalty_term_cons = 5e5*NP.ones(2)
+    else:
+        penalty_term_cons = 2e5*NP.ones(2)
     # Maximum violation for the constraints
-    maximum_violation = NP.array([20,0])
+    maximum_violation = NP.array([20,0.5])
 
     # Define the terminal constraint (leave it empty if not necessary)
     cons_terminal = vertcat()
@@ -268,17 +277,17 @@ def model(zone):
         lterm = 0.5*dHeatrate + 1*u_rad
         rterm = NP.concatenate((1e4*NP.ones(4), 1e4*NP.ones(1), 50*NP.ones(1)))
     elif zone == 'MeetingSouth':
-        lterm = 0.5*dHeatrate + 1*u_rad
+        lterm = 0.01*dHeatrate + 1*u_rad
         rterm = NP.concatenate((1e4*NP.ones(4), 5*1e4*NP.ones(1), 50*NP.ones(1)))
     elif zone == 'Entrance':
-        lterm = 0.5*dHeatrate + 10*u_rad
-        rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 20*NP.ones(1)))
+        lterm = 3*u_rad + 0.01*dHeatrate
+        rterm = NP.concatenate((1e4*NP.ones(4), 5*1e4*NP.ones(1), 55*NP.ones(1)))
     elif zone == 'Corridor':
-        lterm = 0.5*dHeatrate + 1*u_rad
-        rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
+        lterm = 0.01*dHeatrate + 1*u_rad
+        rterm = NP.concatenate((1e4*NP.ones(4), 5*1e4*NP.ones(1), 20*NP.ones(1)))
     elif zone == 'LabSouth':
-        lterm = 0.5*dHeatrate + 5*u_rad
-        rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
+        lterm = 0.01*dHeatrate + 1*u_rad
+        rterm = NP.concatenate((1e4*NP.ones(4), 5*1e4*NP.ones(1), 50*NP.ones(1)))
     elif zone == 'Nerdroom1':
         lterm = 0.5*dHeatrate + 1*u_rad
         rterm = NP.concatenate((1e4*NP.ones(4), 1e4*NP.ones(1), 50*NP.ones(1)))
@@ -287,15 +296,15 @@ def model(zone):
         rterm = NP.concatenate((1e4*NP.ones(4), 1e4*NP.ones(1), 50*NP.ones(1)))
 
     elif zone == 'RestroomM':
-        lterm = 0.5*dHeatrate + 1*u_rad
-        rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
+        lterm = 3*u_rad
+        rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 60*NP.ones(1)))
 
     elif zone == 'RestroomW':
-        lterm = 0.5*dHeatrate + 1*u_rad
+        lterm = 0.01*dHeatrate + 1*u_rad
         rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
 
     elif zone == 'Stairway':
-        lterm = 0.5*dHeatrate + 3*u_rad
+        lterm = 0.5*dHeatrate + 5*u_rad
         rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 25*NP.ones(1)))
 
     elif zone == 'Space01':
