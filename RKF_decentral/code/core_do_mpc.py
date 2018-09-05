@@ -451,6 +451,9 @@ class configuration:
         mpc_iteration = self.simulator.mpc_iteration - 1 #Because already increased in the simulator
         data = self.mpc_data
         #pdb.set_trace()
+        step_index = int( (self.simulator.t0_sim - self.simulator.t_step_simulator) / self.simulator.t_step_simulator)
+        tv_p = self.optimizer.tv_p_values[step_index]
+        data.mpc_tv_p = NP.append(data.mpc_tv_p, [tv_p[:,0]], axis = 0)
         data.mpc_states = NP.append(data.mpc_states, [self.simulator.xf_sim], axis = 0)
         #pdb.set_trace()
         data.mpc_control = NP.append(data.mpc_control, [self.optimizer.u_mpc], axis = 0)

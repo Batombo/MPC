@@ -41,6 +41,7 @@ class mpc_data:
         nx = configuration.model.x.size(1)
         nu = configuration.model.u.size(1)
         np = configuration.model.p.size(1)
+        ntvp = configuration.model.tv_p.size(1)
         if NP.size(configuration.model.z) > 0: # If DAE
             nz = configuration.model.z.size(1)
         else: # Model is ODE
@@ -56,11 +57,13 @@ class mpc_data:
         self.mpc_ref = NP.resize(NP.array([]),(1, 1))
         self.mpc_cpu = NP.resize(NP.array([]),(1, 1))
         self.mpc_parameters = NP.resize(NP.array([]),(1, np))
+        self.mpc_tv_p =  NP.resize(NP.array([]),(1, ntvp))
         # Initialize with initial conditions
         self.mpc_states[0,:] = NP.asarray(configuration.model.ocp.x0 / configuration.model.ocp.x_scaling)[:,0]
 
         self.mpc_control[0,:] = configuration.model.ocp.u0 / configuration.model.ocp.u_scaling
-        self.mpc_time[0] = daystart#86400*150/60
+        self.mpc_tv_p[0,:] =  configuration.optimizer.tv_p_values[0,:,0]
+        self.mpc_time[0] = daystart
 
 class opt_result:
     """ A class for the definition of the result of an optimization problem containing optimal solution, optimal cost and value of the nonlinear constraints"""
@@ -94,7 +97,7 @@ def plot_mpc(configuration):
     mpc_data = configuration.mpc_data
     mpc_states = mpc_data.mpc_states
     mpc_control = mpc_data.mpc_control
-    mpc_tv_p = configuration.optimizer.tv_p_values
+    mpc_tv_p = mpc_data.mpc_tv_p
     mpc_time = mpc_data.mpc_time
     index_mpc = configuration.simulator.mpc_iteration
     plot_states = configuration.simulator.plot_states
@@ -108,7 +111,6 @@ def plot_mpc(configuration):
     Heatrate = NP.transpose(configuration.simulator.Heatrate)
     faultDetector = NP.transpose(configuration.simulator.faultDetector)
     name = configuration.model.name
-    s = int(configuration.simulator.t0_sim / configuration.simulator.t_step_simulator)
 
     plt.ion()
     fig = plt.figure(1)
@@ -150,7 +152,7 @@ def plot_mpc(configuration):
     # Plot the time varying parameters
     for index in range(len(plot_tv_p)):
         plot = plt.subplot(total_subplots, 1, len(plot_states) + 1 + index + 2)
-        plt.plot(mpc_time[0:index_mpc], mpc_tv_p[s-index_mpc:s,plot_tv_p[index],0])
+        plt.plot(mpc_time[0:index_mpc], mpc_tv_p[0:index_mpc,plot_tv_p[index]])
 
         if plot_tv_p[index] == -4:
             plt.ylabel('Blind East []')
@@ -240,7 +242,7 @@ def plot_animation(configuration):
         mpc_data = configuration.mpc_data
         mpc_states = mpc_data.mpc_states
         mpc_control = mpc_data.mpc_control
-        mpc_tv_p = configuration.optimizer.tv_p_values
+        mpc_tv_p = mpc_data.mpc_tv_p
         mpc_time = mpc_data.mpc_time
         index_mpc = configuration.simulator.mpc_iteration
         plot_states = configuration.simulator.plot_states
@@ -261,7 +263,6 @@ def plot_animation(configuration):
         t_step = configuration.simulator.t_step_simulator
         v_opt = configuration.optimizer.opt_result_step.optimal_solution
         name = configuration.model.name
-        s = int(configuration.simulator.t0_sim / configuration.simulator.t_step_simulator)
 
         Heatrate = NP.transpose(configuration.simulator.Heatrate)
 
@@ -297,7 +298,7 @@ def plot_animation(configuration):
         # Plot the time varying parameters
         for index in range(len(plot_tv_p)):
             plot = plt.subplot(total_subplots, 1, len(plot_states) + 1 + index + 1)
-            plt.plot(mpc_time[0:index_mpc], mpc_tv_p[s-index_mpc:s,plot_tv_p[index],0],'-k', linewidth=2.0)
+            plt.plot(mpc_time[0:index_mpc], mpc_tv_p[0:index_mpc,plot_tv_p[index]],'-k', linewidth=2.0)
             if plot_tv_p[index] == -4:
                 plt.ylabel('Blind East []')
             elif plot_tv_p[index] == -3:
