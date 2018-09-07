@@ -296,8 +296,8 @@ def model(zone):
         rterm = NP.concatenate((1e4*NP.ones(4), 1e4*NP.ones(1), 50*NP.ones(1)))
 
     elif zone == 'RestroomM':
-        lterm = 3*u_rad
-        rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 60*NP.ones(1)))
+        lterm = 4*u_rad + dHeatrate
+        rterm = NP.concatenate((0*1e4*NP.ones(4), 0*1e4*NP.ones(1), 55*NP.ones(1)))
 
     elif zone == 'RestroomW':
         lterm = 0.01*dHeatrate + 1*u_rad

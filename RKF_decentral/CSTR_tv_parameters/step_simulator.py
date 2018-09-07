@@ -40,9 +40,10 @@ def step_simulator(model_fmu, simTime, secStep, configurations):
     model_fmu.set('u_blinds_S', tmp[2])
     model_fmu.set('u_blinds_W', tmp[3])
 
+
     ## DEBUG: set all unused_zones to 20 degree
-    for u in unused_zones:
-        model_fmu.set('u_rad_'+u, 20)
+    # for u in unused_zones:
+    #     model_fmu.set('u_rad_'+u, 20)
 
     for i in range(len(configurations)):
         # AHU
@@ -53,6 +54,7 @@ def step_simulator(model_fmu, simTime, secStep, configurations):
 
     # do one step simulation
     res = model_fmu.do_step(current_t=simTime, step_size=secStep, new_step=True)
+
     Heatrate = NP.zeros((len(configurations),1))
     for i in range(0, Heatrate.shape[0]):
         Heatrate[i,:] = model_fmu.get('Heatrate_' + zones[i])
@@ -95,6 +97,7 @@ def step_simulator(model_fmu, simTime, secStep, configurations):
         for k in range(0,len(states_all)): states.append(states_all[k])
         states = NP.squeeze(states)
 
+        # keep track of unmetHours
         diff = NP.zeros((1,1))
         step_index = int(configurations[i].simulator.t0_sim / configurations[i].simulator.t_step_simulator)
         if states[0] < configurations[i].optimizer.tv_p_values[step_index,-5,0]:
@@ -102,6 +105,7 @@ def step_simulator(model_fmu, simTime, secStep, configurations):
         elif states[0] >  configurations[i].optimizer.tv_p_values[step_index,-6,0]:
             diff = NP.resize(NP.abs(states[0] - configurations[i].optimizer.tv_p_values[step_index,-6,0]),(1,1))
         configurations[i].simulator.unmetHours = NP.concatenate((configurations[i].simulator.unmetHours, diff), axis = 1)
+
         # close loop for all configurations
         configurations[i].simulator.xf_sim = states
         # Update the initial condition for the next iteration

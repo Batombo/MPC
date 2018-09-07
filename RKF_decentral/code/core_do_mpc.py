@@ -113,7 +113,7 @@ class simulator:
     """A class for the definition model equations and optimal control problem formulation"""
     def __init__(self, model_simulator, param_dict, *opt):
         # Assert for define length of param_dict
-        required_dimension = 11
+        required_dimension = 12
         if not (len(param_dict) == required_dimension): raise Exception("Simulator information is incomplete. The number of elements in the dictionary is not correct")
         # Unscale the states on the rhs
         rhs_unscaled = substitute(model_simulator.rhs, model_simulator.x, model_simulator.x * model_simulator.ocp.x_scaling)/model_simulator.ocp.x_scaling
@@ -141,6 +141,7 @@ class simulator:
         self.t_step_simulator = param_dict["t_step_simulator"]
         self.t0_sim = daystart#86400*150/60
         self.tf_sim = param_dict["t_step_simulator"] + self.t0_sim
+        self.save_simulation = param_dict["save_simulation"]
         # NOTE:  The same initial condition than for the optimizer is imposed
         self.x0_sim = model_simulator.ocp.x0 / model_simulator.ocp.x_scaling
         self.xf_sim = 0

@@ -265,9 +265,10 @@ def plot_animation(configuration):
         name = configuration.model.name
 
         Heatrate = NP.transpose(configuration.simulator.Heatrate)
+        unmetHours = NP.transpose(configuration.simulator.unmetHours)
 
         plt.ion()
-        total_subplots = len(plot_states) + len(plot_control) + len(plot_tv_p) + 1
+        total_subplots = len(plot_states) + len(plot_control) + len(plot_tv_p) + 1 + 1
         plt.figure(2)
         # Clear the previous animation
         plt.clf()
@@ -295,9 +296,20 @@ def plot_animation(configuration):
         axes = plt.gca()
         axes.set_xlim([mpc_time[0]-5,mpc_time[-1]+10*10])
 
+        # Plot Heatrate
+        plot = plt.subplot(total_subplots, 1, len(plot_states) + index + 1 + 1)
+        plt.plot(mpc_time[0:index_mpc], unmetHours[0:index_mpc,0],'-k', linewidth=2.0)
+        plt.ylabel('unmetHours []')
+        plt.xlabel("Time")
+        plt.grid()
+        axes = plt.gca()
+        axes.set_xlim([mpc_time[0]-5,mpc_time[-1]+10*10])
+
+
+
         # Plot the time varying parameters
         for index in range(len(plot_tv_p)):
-            plot = plt.subplot(total_subplots, 1, len(plot_states) + 1 + index + 1)
+            plot = plt.subplot(total_subplots, 1, len(plot_states) + 1 + index + 1 + 1)
             plt.plot(mpc_time[0:index_mpc], mpc_tv_p[0:index_mpc,plot_tv_p[index]],'-k', linewidth=2.0)
             if plot_tv_p[index] == -4:
                 plt.ylabel('Blind East []')
@@ -315,7 +327,7 @@ def plot_animation(configuration):
 
         # Plot the control inputs
         for index in range(len(plot_control)):
-            plot = plt.subplot(total_subplots, 1, len(plot_states) + 1 + len(plot_tv_p) + index + 1)
+            plot = plt.subplot(total_subplots, 1, len(plot_states) + 1 + len(plot_tv_p) + index + 1 + 1)
         	# First plot the prediction
             plot_control_pred(v_opt, t0, plot_control[index], '-b', n_scenarios, n_branches, nk, parent_scenario, U_offset, u_scaling, t_step, mpc_control[index_mpc-1,plot_control[index]])
             plt.plot(mpc_time[0:index_mpc], mpc_control[0:index_mpc,plot_control[index]] * u_scaling[plot_control[index]],'-k' ,drawstyle='steps', linewidth=2.0)
@@ -334,4 +346,22 @@ def plot_animation(configuration):
 
     else:
         # nothing to be done if no animation is chosen
+        pass
+
+def save_simulation(configuration):
+    if configuration.simulator.save_simulation:
+        name = configuration.model.name
+
+        mpc_data = configuration.mpc_data
+        mpc_states = mpc_data.mpc_states
+        mpc_control = mpc_data.mpc_control
+        mpc_tv_p = mpc_data.mpc_tv_p
+        mpc_time = mpc_data.mpc_time
+
+        Heatrate = NP.transpose(configuration.simulator.Heatrate)
+        unmetHours = NP.transpose(configuration.simulator.unmetHours)
+        
+        NP.save('Simulation_Data\Data_' + name + '.npy', NP.concatenate((mpc_states, mpc_control, mpc_tv_p, mpc_time, Heatrate, unmetHours),axis =1))
+    else:
+        # nothing to be done if no save is chosen
         pass
