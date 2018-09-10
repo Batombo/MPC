@@ -142,5 +142,7 @@ data_do_mpc.plot_mpc(configuration_1)
 # Export to matlab if wanted
 data_do_mpc.export_to_matlab(configuration_1)
 
+data_do_mpc.save_simulation(configuration_1)
+
 
 raw_input("Press Enter to exit do-mpc...")

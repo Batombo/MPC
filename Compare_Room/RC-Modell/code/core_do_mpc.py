@@ -113,7 +113,7 @@ class simulator:
     """A class for the definition model equations and optimal control problem formulation"""
     def __init__(self, model_simulator, param_dict, *opt):
         # Assert for define length of param_dict
-        required_dimension = 10
+        required_dimension = 11
         if not (len(param_dict) == required_dimension): raise Exception("Simulator information is incomplete. The number of elements in the dictionary is not correct")
         # Unscale the states on the rhs
         rhs_unscaled = substitute(model_simulator.rhs, model_simulator.x, model_simulator.x * model_simulator.ocp.x_scaling)/model_simulator.ocp.x_scaling
@@ -135,6 +135,7 @@ class simulator:
         self.plot_anim = param_dict["plot_anim"]
         self.export_to_matlab = param_dict["export_to_matlab"]
         self.export_name = param_dict["export_name"]
+        self.save_simulation = param_dict["save_simulation"]
         self.p_real_now = param_dict["p_real_now"]
         self.tv_p_real_now = param_dict["tv_p_real_now"]
         self.t_step_simulator = param_dict["t_step_simulator"]
@@ -148,6 +149,11 @@ class simulator:
         # Store HeatRate used in Energpylus
         self.HeatRate = 300*NP.ones((1,1))
         self.u_AHU1_noERC = 0*NP.ones((1,1))
+        # For plot only
+        self.window = 0*NP.ones((1,1))
+        self.heatsetp = 18*NP.ones((1,1))
+        self.blindpos = 0*NP.ones((1,1))
+        self.unmetHours = 0*NP.ones((1,1))
     @classmethod
     def user_simulator(cls, param_dict, *opt):
         " This is open for the implementation of a user-defined simulator class"
@@ -232,7 +238,7 @@ class configuration:
         #NOTE: this could be passed as parameters of the optimizer class
         opts["ipopt.max_iter"] = 500
         opts["ipopt.tol"] = 1e-6
-        opts["ipopt.print_level"] = 5
+        opts["ipopt.print_level"] = 0
         # Setup the solver
         opts["print_time"] = False
         solver = nlpsol("solver", self.optimizer.nlp_solver, nlp_dict_out['nlp_fcn'], opts)
@@ -357,7 +363,7 @@ class configuration:
             # use Neural Network to do calculate Setpoint
             length = len(self.mpc_data.mpc_states)
             # NN has been trained with vector [oldest, oldest+1,..., present-1, present]
-            HeatRate = NP.append(self.simulator.HeatRate[0,length-1:length], u_mpc[-1]*63.15)
+            HeatRate = NP.append(self.simulator.HeatRate[0,length-1:length], u_mpc[-1]*63.15) # the space has a 63.15 m2 area
             u_AHU1_noERC = NP.append(self.simulator.u_AHU1_noERC[0,length-1:length], u_mpc[-2])
             ZoneTemp = self.mpc_data.mpc_states[length-1:length, 0]
             OutdoorTemp = self.optimizer.tv_p_values[length-1:length+1,1,0]
@@ -380,9 +386,11 @@ class configuration:
             tmp[3] = converter.HeatingRate2Schedule(x_test)
 
 
-            print "Setpoint Zone 1: " + str(tmp[3])
+            # print "Setpoint Zone 1: " + str(tmp[3])
 
         model_fmu.set('u_rad_OfficesZ1', tmp[3])
+
+
 
         # do one step simulation
         res = model_fmu.do_step(current_t=simTime, step_size=secStep, new_step=True)
@@ -404,6 +412,12 @@ class configuration:
         # Concatenate past HeatRate values with present ones
         self.simulator.HeatRate = NP.concatenate((self.simulator.HeatRate, HeatRate), axis = 1)
         self.simulator.u_AHU1_noERC = NP.concatenate((self.simulator.u_AHU1_noERC, u_AHU1_noERC), axis = 1)
+
+
+        self.simulator.window = NP.concatenate((self.simulator.window, tmp[1]*NP.ones((1,1))), axis = 1)
+        self.simulator.heatsetp = NP.concatenate((self.simulator.heatsetp, tmp[3]*NP.ones((1,1))), axis = 1)
+        self.simulator.blindpos = NP.concatenate((self.simulator.blindpos, NP.resize(model_fmu.get('u_blinds_W_val'),(1,1))), axis = 1)
+
 
         # Get the new states
         states.append(model_fmu.get('Tzone_1'))
@@ -461,7 +475,20 @@ class configuration:
         else:
             self.simulator.xf_sim = states
         diff =  NP.squeeze(NP.array(x_next)) - states
-        print diff
+        # print diff
+
+        # keep track of unmetHours
+        diff = NP.zeros((1,1))
+        step_index = int(self.simulator.t0_sim / self.simulator.t_step_simulator)
+        if states[0] < self.optimizer.tv_p_values[step_index,-1,0]:
+            diff = NP.resize(NP.abs(states[0] - self.optimizer.tv_p_values[step_index,-1,0]),(1,1))
+        elif states[0] >  self.optimizer.tv_p_values[step_index,-2,0]:
+            diff = NP.resize(NP.abs(states[0] - self.optimizer.tv_p_values[step_index,-2,0]),(1,1))
+        self.simulator.unmetHours = NP.concatenate((self.simulator.unmetHours, diff), axis = 1)
+
+
+
+
         # Update the initial condition for the next iteration
         self.simulator.x0_sim = self.simulator.xf_sim
         # Correction for sizes of arrays when dimension is 1
@@ -501,6 +528,9 @@ class configuration:
         mpc_iteration = self.simulator.mpc_iteration - 1 #Because already increased in the simulator
         data = self.mpc_data
         #pdb.set_trace()
+        step_index = int( (self.simulator.t0_sim - self.simulator.t_step_simulator) / self.simulator.t_step_simulator)
+        tv_p = self.optimizer.tv_p_values[step_index]
+        data.mpc_tv_p = NP.append(data.mpc_tv_p, [tv_p[:,0]], axis = 0)
         data.mpc_states = NP.append(data.mpc_states, [self.simulator.xf_sim], axis = 0)
         #pdb.set_trace()
         data.mpc_control = NP.append(data.mpc_control, [self.optimizer.u_mpc], axis = 0)
