@@ -29,7 +29,6 @@ def f_gauss(time, rand =0):
         return s
     else:
         return u_AHU1_noERC[-1]
-
 def f_const_gauss(time, min, max, rand = 0):
     if time % 1 == 0 or rand == 1:
         if time <= 7 or time >= 19:
@@ -49,7 +48,6 @@ def f_const(time, min, max):
         return min
     else:
         return max
-
 def f_stairs(sched,time, min, max, stepsize, default):
     eps = 1e-5
     if time <= 600:
@@ -60,18 +58,16 @@ def f_stairs(sched,time, min, max, stepsize, default):
         return np.array(sched[-1]) - stepsize
     else:
         return sched[-1]
-
 def simTime2Clock(simTime, days):
     return simTime/600 * float(1)/EPTimeStep - days * dayduration/600 *  float(1)/EPTimeStep
-
 def radiation2shading(vsol, threshold):
     if vsol[-1] < threshold:
         return 0
     else:
         return 1
-#7
 for i in range(0,7):
     # Load FMU created from compile_fmu() or EnergyPlusToFMU
+    # different FMUs for different locations
     if i == 0:
         modelName = 'RKF_Potsdam'
     elif i == 1:
@@ -87,6 +83,9 @@ for i in range(0,7):
     else:
         modelName = 'RKF_Zielona'
     model = load_fmu(modelName+'.fmu')
+    # initialize all vectors in first iteration
+    # this can be done way shorter with an adequate loop but this way you know
+    # the setpoints with the first look - faults can easily happen here
     if i == 0:
         SchedVal_Coworking = []
         SchedVal_Corridor = []
@@ -101,7 +100,6 @@ for i in range(0,7):
         SchedVal_RestroomW = []
         SchedVal_Space01 = []
         SchedVal_Stairway = []
-
 
         Heatrate_Coworking = []
         Heatrate_Corridor = []
@@ -173,9 +171,7 @@ for i in range(0,7):
         u_AHU_RestroomW = []
         u_AHU_Space01 = []
         u_AHU_Stairway = []
-
-
-    # Setup simulation parameters
+    # Setup simulation parameters - some FMU stuff
     index = 0
     simTime = 86400*0
     timeStop = days*hours*minutes*seconds
@@ -193,7 +189,7 @@ for i in range(0,7):
     while simTime < timeStop:
         clock = simTime2Clock(sTime, days)
         if i == 0:
-            setp_urad = f_const(clock,20,22)
+            setp_urad = f_const(clock,17,20)
             setp_AHU = 0
 
             model.set('u_blinds_E', 0)
@@ -280,6 +276,7 @@ for i in range(0,7):
         model.set('u_AHU_Space01', setp_AHU)
         model.set('u_AHU_Stairway', setp_AHU)
 
+        # do one simulation step in E+
         res = model.do_step(current_t=simTime, step_size=secStep, new_step=True)
 
         SchedVal_Coworking.append(setp_urad)
@@ -333,10 +330,6 @@ for i in range(0,7):
         v_IG_RestroomW.append(model.get('v_IG_RestroomW'))
         v_IG_Space01.append(model.get('v_IG_Space01'))
         v_IG_Stairway.append(model.get('v_IG_Stairway'))
-
-
-
-
 
         u_AHU_Coworking.append(setp_AHU)
         u_AHU_Corridor.append(setp_AHU)
@@ -412,8 +405,11 @@ for i in range(0,7):
     # P.plot(t/(3600*24), Heatrate_Corridor[i*6*24*days:])
     # P.xlabel('Time (days)')
     # P.show()
+
+    # clear the loaded model from location x and load the next one
     model = None
-np.save('full.npy', [
+# Save either the simulation or the disturbances
+np.save('Berlin.npy', [
 
         Heatrate_Coworking,
         T_Coworking,

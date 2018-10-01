@@ -1,4 +1,4 @@
-days = 1
+days = 10
 hours = 24
 minutes = 60
 seconds = 60

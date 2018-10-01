@@ -103,6 +103,8 @@ while (configuration_1.simulator.t0_sim + configuration_1.simulator.t_step_simul
     current_t = configuration_1.simulator.t0_sim
     tstep = configuration_1.simulator.t_step_simulator
     configuration_1.step_simulator(model_fmu, current_t, tstep)
+
+    # configuration_1.compare(model_fmu, current_t, tstep)
     # configuration_1.make_step_simulator()
     """
     ----------------------------

@@ -30,23 +30,23 @@ from pdb import set_trace as bp
 from vars import *
 
 def model():
-    lbub = NP.load('Neural_Network\lbub_60.npy')
+    lbub = NP.load('Neural_Network\lbub.npy')
     x_lb_NN = lbub[0]
     x_ub_NN = lbub[1]
     y_lb_NN = lbub[2]
     y_ub_NN = lbub[3]
 
 
-    json_file = open('Neural_Network\model_60.json', 'r')
+    json_file = open('Neural_Network\model_full.json', 'r')
     model_json = json_file.read()
     json_file.close()
     model = model_from_json(model_json)
     # load weights into new model
-    model.load_weights("Neural_Network\model_60.h5")
+    model.load_weights("Neural_Network\model_full.h5")
     Theta = {}
     # for i in range(len(model.layers)):
     i = 0
-    for j in [0,2,4,6,8]:
+    for j in range(len(model.layers)):
         weights = model.layers[j].get_weights()
         Theta['Theta'+str(i+1)] =  NP.insert(weights[0].transpose(),0,weights[1].transpose(),axis=1)
         i+=1
@@ -165,7 +165,7 @@ def model():
     z_ub = NP.array([])
 
     # Bounds on the control inputs. Use "inf" for unconstrained inputs
-    u_lb = NP.array([0, 0, 0, 16])
+    u_lb = NP.array([0, 0, 0, 17])
     u_ub = NP.array([1, 1, 1, 22])
     u0 = NP.array([0, 0, 0, 18])
     # Scaling factors for the states and control inputs. Important if the system is ill-conditioned
@@ -184,7 +184,7 @@ def model():
     # Penalty term to add in the cost function for the constraints (it should be the same size as cons)
     penalty_term_cons = NP.array([1e6, 1e6])
     # Maximum violation for the constraints
-    maximum_violation = 20*NP.array([1, 1])
+    maximum_violation = NP.array([20, 1])
 
     # Define the terminal constraint (leave it empty if not necessary)
     cons_terminal = vertcat()

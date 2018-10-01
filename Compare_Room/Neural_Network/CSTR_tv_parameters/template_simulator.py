@@ -71,12 +71,14 @@ def simulator(model):
     # Choose the indices of the states to plot
     plot_states = [features*(numbers-1)]
     # Choose the indices of the controls to plot
-    plot_control = [2,3]
+    plot_control = [1,2,3]
     # Plot animation (False or True)
-    plot_anim = True
+    plot_anim = False
     # Export to matlab (for better plotting or postprocessing)
     export_to_matlab = False
     export_name = "mpc_result.mat"  # Change this name if desired
+    # saves all trajectories etc.
+    save_simulation = True
 
     """
     --------------------------------------------------------------------------
@@ -85,7 +87,9 @@ def simulator(model):
     """
 
     simulator_dict = {'integration_tool':integration_tool,'plot_states':plot_states,
-    'plot_control': plot_control,'plot_anim': plot_anim,'export_to_matlab': export_to_matlab,'export_name': export_name, 'p_real_now':p_real_now, 't_step_simulator': t_step_simulator, 'integrator_opts': opts, 'tv_p_real_now':tv_p_real_now}
+    'plot_control': plot_control,'plot_anim': plot_anim,'export_to_matlab': export_to_matlab,
+    'export_name': export_name, 'p_real_now':p_real_now, 't_step_simulator': t_step_simulator,
+     'integrator_opts': opts, 'tv_p_real_now':tv_p_real_now, 'save_simulation':save_simulation}
 
     simulator_1 = core_do_mpc.simulator(model, simulator_dict)
 

@@ -91,7 +91,7 @@ while (configuration_1.simulator.t0_sim + configuration_1.simulator.t_step_simul
     ----------------------------
     """
     # Make one optimizer step (solve the NLP)
-    configuration_1.make_step_optimizer()
+    # configuration_1.make_step_optimizer()
 
     """
     ----------------------------
@@ -101,9 +101,9 @@ while (configuration_1.simulator.t0_sim + configuration_1.simulator.t_step_simul
     # Simulate the system one step using the solution obtained in the optimization
     current_t = configuration_1.simulator.t0_sim
     tstep = configuration_1.simulator.t_step_simulator
-    configuration_1.step_simulator(model_fmu, current_t, tstep)
+    # configuration_1.step_simulator(model_fmu, current_t, tstep)
 
-    # configuration_1.compare(model_fmu, current_t, tstep)
+    configuration_1.compare(model_fmu, current_t, tstep)
 
 
     # configuration_1.make_step_simulator()
@@ -144,7 +144,7 @@ print "Consumed Power: " + str(consumedpower) + " [W]"
 #print elapsed_time
 print 'Elapsed Time: ' + str(elapsed_time)
 data_do_mpc.plot_mpc(configuration_1)
-
+data_do_mpc.save_simulation(configuration_1)
 # Export to matlab if wanted
 data_do_mpc.export_to_matlab(configuration_1)
 

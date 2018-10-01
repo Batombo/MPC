@@ -112,7 +112,7 @@ class simulator:
     """A class for the definition model equations and optimal control problem formulation"""
     def __init__(self, model_simulator, param_dict, *opt):
         # Assert for define length of param_dict
-        required_dimension = 10
+        required_dimension = 11
         if not (len(param_dict) == required_dimension): raise Exception("Simulator information is incomplete. The number of elements in the dictionary is not correct")
         # Unscale the states on the rhs
         rhs_unscaled = substitute(model_simulator.rhs, model_simulator.x, model_simulator.x * model_simulator.ocp.x_scaling)/model_simulator.ocp.x_scaling
@@ -133,6 +133,7 @@ class simulator:
         self.plot_control = param_dict["plot_control"]
         self.plot_anim = param_dict["plot_anim"]
         self.export_to_matlab = param_dict["export_to_matlab"]
+        self.save_simulation = param_dict["save_simulation"]
         self.export_name = param_dict["export_name"]
         self.p_real_now = param_dict["p_real_now"]
         self.tv_p_real_now = param_dict["tv_p_real_now"]
@@ -147,6 +148,7 @@ class simulator:
         # Store HeatRate used in Energpylus
         self.HeatRate = 0*NP.ones((1,1))
         self.faultDetector = 0*NP.ones((1,1))
+        self.unmetHours = 0*NP.ones((1,1))
     @classmethod
     def user_simulator(cls, param_dict, *opt):
         " This is open for the implementation of a user-defined simulator class"
@@ -231,13 +233,12 @@ class configuration:
         #NOTE: this could be passed as parameters of the optimizer class
         opts["ipopt.max_iter"] = 500
         opts["ipopt.tol"] = 1e-6
-        opts["ipopt.print_level"] = 5
+        opts["ipopt.print_level"] = 0
         # Setup the solver
         opts["print_time"] = False
         start_time = time.time()
         solver = nlpsol("solver", self.optimizer.nlp_solver, nlp_dict_out['nlp_fcn'], opts)
         elapsed_time = time.time() - start_time
-        bp()
         arg = {}
         # Initial condition
         arg["x0"] = nlp_dict_out['vars_init']
@@ -349,7 +350,6 @@ class configuration:
         u_mpc[2] = NP.floor(u_mpc[2]*10)/10
         model_fmu.set('u_AHU1_noERC', u_mpc[2])
 
-        # model_fmu.set('u_AHU2_noERC', u_mpc[4])
 
         """
         Baseboard Heater
@@ -358,7 +358,6 @@ class configuration:
 
         # do one step simulation
         res = model_fmu.do_step(current_t=simTime, step_size=secStep, new_step=True)
-        # bp()
 
         HeatRate = NP.zeros((1,1))
         for i in range(0, HeatRate.shape[0]):
@@ -392,15 +391,17 @@ class configuration:
         states = NP.squeeze(states)
 
 
-        # prev = self.mpc_data.mpc_states[simTime/600,features*(numbers-1):]
+        # keep track of unmetHours
+        diff = NP.zeros((1,1))
+        step_index = int(self.simulator.t0_sim / self.simulator.t_step_simulator)
+        if states[0] < self.optimizer.tv_p_values[step_index,-1,0]:
+            diff = NP.resize(NP.abs(states[0] - self.optimizer.tv_p_values[step_index,-1,0]),(1,1))
+        elif states[0] >  self.optimizer.tv_p_values[step_index,-2,0]:
+            diff = NP.resize(NP.abs(states[0] - self.optimizer.tv_p_values[step_index,-2,0]),(1,1))
+        self.simulator.unmetHours = NP.concatenate((self.simulator.unmetHours, diff), axis = 1)
 
 
-        # states = NP.reshape(states, (states.shape[0],1))
-        # if simTime/60 >= 431400 and  simTime/60 <= 431610:
-        if u_mpc[2] != 0:
-            print u_mpc
-            bp()
-        # bp()
+
         disturbances = NP.load('Neural_Network\disturbances.npy').squeeze()
         disturbances_lb = NP.min(disturbances,axis =1)
         disturbances_ub = NP.max(disturbances,axis =1)
@@ -475,6 +476,7 @@ class configuration:
         duration = 144*10
         result_NN = NP.zeros((duration,self.model.x.shape[0]))
         result_Ep = NP.zeros((duration,self.model.x.shape[0]))
+        Heatrate = []
         sched = NP.zeros((duration,4))
         for i in range(0,duration):
             u_mpc = self.optimizer.u_mpc
@@ -517,13 +519,13 @@ class configuration:
             Baseboard Heater
             """
             model_fmu.set('u_rad_OfficesZ1', u_mpc[3])
-            # model_fmu.set('u_rad_OfficesZ2', u_mpc[5])
             # do one step simulation
             res = model_fmu.do_step(current_t=simTime, step_size=secStep, new_step=True)
 
             # Get the new states
             states.append(model_fmu.get('Tzone_1'))
             # states.append(model_fmu.get('HeatRate_Z1')/100)
+            Heatrate.append(model_fmu.get('HeatRate_Z1')/63.15)
             states.append(model_fmu.get('u_blinds_N_val'))
             states.append(model_fmu.get('u_blinds_W_val'))
             states.append(model_fmu.get('u_AHU1_noERC_SchedVal'))
@@ -545,8 +547,11 @@ class configuration:
             result_Ep[i,:] = states
             sched[i,:] = u_mpc
 
-        # bp()
+
         rmse = NP.sqrt(NP.mean((result_Ep[:,0]-result_NN[:,features*(numbers-1)])**2,axis=0))
+        bp()
+        NP.save('open_loop_ANN.npy', NP.concatenate((result_Ep, result_NN, sched),axis = 1))
+        NP.save('Heatrate.npy', Heatrate)
         # NP.sqrt(NP.mean((result_Ep - result_NN)**2,axis=0))
         print("RMSE: " + str(rmse))
         NP.argmax(NP.abs(result_NN[:,features*(numbers-1)]-result_Ep[:,0]),axis=0)
@@ -598,6 +603,9 @@ class configuration:
         mpc_iteration = self.simulator.mpc_iteration - 1 #Because already increased in the simulator
         data = self.mpc_data
         #pdb.set_trace()
+        step_index = int( (self.simulator.t0_sim - self.simulator.t_step_simulator) / self.simulator.t_step_simulator)
+        tv_p = self.optimizer.tv_p_values[step_index]
+        data.mpc_tv_p = NP.append(data.mpc_tv_p, [tv_p[:,0]], axis = 0)
         data.mpc_states = NP.append(data.mpc_states, [self.simulator.xf_sim], axis = 0)
         #pdb.set_trace()
         data.mpc_control = NP.append(data.mpc_control, [self.optimizer.u_mpc], axis = 0)

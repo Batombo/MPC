@@ -6601,8 +6601,8 @@ OS:RunPeriod,
   Run Period 1,                           !- Name
   1,                                      !- Begin Month
   1,                                      !- Begin Day of Month
-  12,                                     !- End Month
-  31,                                     !- End Day of Month
+  1,                                      !- End Month
+  2,                                      !- End Day of Month
   ,                                       !- Use Weather File Holidays and Special Days
   ,                                       !- Use Weather File Daylight Saving Period
   ,                                       !- Apply Weekend Holiday Rule
@@ -6716,7 +6716,7 @@ OS:ShadingControl,
   ExteriorShade,                          !- Shading Type
   {794f2e7e-382c-4b82-b483-e15092b0b3eb}, !- Construction with Shading Name
   {ff9e1f10-9519-44de-9c29-e9339964cb40}, !- Shading Device Material Name
-  OnIfHighSolarOnWindow,                  !- Shading Control Type
+  AlwaysOff,                              !- Shading Control Type
   ,                                       !- Schedule Name
   ,                                       !- Setpoint
   Yes,                                    !- Shading Control Is Scheduled
@@ -6753,7 +6753,7 @@ OS:ShadingControl,
   ExteriorShade,                          !- Shading Type
   {794f2e7e-382c-4b82-b483-e15092b0b3eb}, !- Construction with Shading Name
   {ff9e1f10-9519-44de-9c29-e9339964cb40}, !- Shading Device Material Name
-  OnIfHighSolarOnWindow,                  !- Shading Control Type
+  AlwaysOff,                              !- Shading Control Type
   ,                                       !- Schedule Name
   ,                                       !- Setpoint
   Yes,                                    !- Shading Control Is Scheduled
@@ -7212,7 +7212,7 @@ OS:ZoneVentilation:DesignFlowRate,
   0.03636,                                !- Temperature Term Coefficient
   0.1177,                                 !- Velocity Term Coefficient
   0,                                      !- Velocity Squared Term Coefficient
-  25,                                     !- Minimum Indoor Temperature {C}
+  50,                                     !- Minimum Indoor Temperature {C}
   ,                                       !- Minimum Indoor Temperature Schedule Name
   100,                                    !- Maximum Indoor Temperature {C}
   ,                                       !- Maximum Indoor Temperature Schedule Name
@@ -7523,13 +7523,13 @@ OS:Schedule:Day,
   ,                                       !- Interpolate to Timestep
   7,                                      !- Hour 1
   0,                                      !- Minute 1
-  20,                                     !- Value Until Time 1
+  17,                                     !- Value Until Time 1
   20,                                     !- Hour 2
   0,                                      !- Minute 2
-  22,                                     !- Value Until Time 2
+  20,                                     !- Value Until Time 2
   24,                                     !- Hour 3
   0,                                      !- Minute 3
-  20;                                     !- Value Until Time 3
+  17;                                     !- Value Until Time 3
 
 OS:SizingPeriod:DesignDay,
   {620d3d3d-559a-4fd1-990c-e00befaa8a2b}, !- Handle
@@ -7700,4 +7700,11 @@ OS:SizingPeriod:DesignDay,
   ,                                       !- Diffuse Solar Day Schedule Name
   0.484,                                  !- ASHRAE Taub {dimensionless}
   1.888;                                  !- ASHRAE Taud {dimensionless}
+
+OS:Output:Variable,
+  {2fb3eb86-bc14-4e6b-85fa-01a69d3421b6}, !- Handle
+  Output Variable 7,                      !- Name
+  *,                                      !- Key Value
+  Baseboard Total Heating Energy,         !- Variable Name
+  Timestep;                               !- Reporting Frequency
 

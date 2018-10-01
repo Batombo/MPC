@@ -29,18 +29,19 @@ from keras.models import model_from_json
 from pdb import set_trace as bp
 from vars import *
 def model(zone):
-    lbub = NP.load('Neural_Network\Models\year\lbub_'+zone+'.npy')
+    # load ANN data and assign weights to matrices
+    lbub = NP.load('Neural_Network\Models\lbub_'+zone+'.npy')
     x_lb_NN = lbub[0]
     x_ub_NN = lbub[1]
     y_lb_NN = lbub[2]
     y_ub_NN = lbub[3]
 
-    json_file = open('Neural_Network\Models\year\model_'+zone+'.json', 'r')
+    json_file = open('Neural_Network\Models\model_'+zone+'.json', 'r')
     model_json = json_file.read()
     json_file.close()
     model = model_from_json(model_json)
     # load weights into new model
-    model.load_weights('Neural_Network\Models\year\model_'+zone+'.h5')
+    model.load_weights('Neural_Network\Models\model_'+zone+'.h5')
     Theta = {}
     i = 0
     for j in range(len(model.layers)):
@@ -54,10 +55,9 @@ def model(zone):
     --------------------------------------------------------------------------
     """
     # Define the uncertainties as CasADi symbols
-
     alpha   = MX.sym('alpha')
     # Define the differential states as CasADi symbols
-    # T(t-1) + u_rad(t-1) + u_ahu(t-1) + v_IG(t-1) + u_blinds(t-1) + v(t-1)
+    # 16 past states
     x = MX.sym('x', 16)
     # Define the control inputs as CasADi symbols
     u_blinds_E = MX.sym('u_blinds_E')
@@ -66,7 +66,6 @@ def model(zone):
     u_blinds_W = MX.sym('u_blinds_W')
     u_AHU = MX.sym('u_AHU')
     u_rad = MX.sym('u_rad')
-
     u = vertcat(u_blinds_E, u_blinds_N, u_blinds_S, u_blinds_W, u_AHU, u_rad)
     # Define time-varying parameters that can chance at each step of the prediction and at each sampling time of the MPC controller. For example, future weather predictions
     v_IG = MX.sym('v_IG')
@@ -79,10 +78,14 @@ def model(zone):
     v_Hum_amb = MX.sym('v_Hum_amb')
     v_P_amb = MX.sym('v_P_amb')
 
+    # the following tv_p values are not input for ANN
+    # therefore added later to the vector
     u_ahu_ub = MX.sym('u_ahu_ub')
     setp_ub = MX.sym('setp_ub')
     setp_lb = MX.sym('setp_lb')
 
+    # these blind values are defined as time varying paramters because they
+    # are calcuated by another zone
     u_blinds_E_val = MX.sym('u_blinds_E_val')
     u_blinds_N_val = MX.sym('u_blinds_N_val')
     u_blinds_S_val = MX.sym('u_blinds_S_val')
@@ -95,6 +98,9 @@ def model(zone):
     template_model: define algebraic and differential equations
     --------------------------------------------------------------------------
     """
+    # each room has different inputs because of different calculated trajectories
+    # e.g.: Coworking calculates u_blinds_E, gets u_blinds_N_val as tv_p and
+    # u_blinds_S/u_blinds_W are constantly zero because of the upper bound u_ub
     if zone == 'Coworking':
         input = vertcat(x, u_blinds_E, u_blinds_N_val, u_blinds_S, u_blinds_W, u[4:], v)
     elif zone == 'Corridor':
@@ -122,9 +128,9 @@ def model(zone):
     elif zone == 'Stairway':
         input = vertcat(x, u_blinds_E_val, u_blinds_N, u_blinds_S, u_blinds_W, u[4:], v)
 
-    # input = vertcat(x,u,v)
+    # scale input as with ANN training
     input = NP.divide(input - x_lb_NN, x_ub_NN - x_lb_NN)
-
+    # do the matrix multiplication
     for i in range(1,len(model.layers) + 1):
         tmp_a = 'a' +  str(i) + '_'
         if i == 1:
@@ -142,7 +148,7 @@ def model(zone):
     dHeatrate = MX.sym('dHeatrate')
     dT = NP.multiply(vars()[tmp_a][0], y_ub_NN[0]-y_lb_NN[0]) + y_lb_NN[0]
     dHeatrate = NP.multiply(vars()[tmp_a][1], y_ub_NN[1]-y_lb_NN[1]) + y_lb_NN[1]
-    #
+    # update the states for each zone
     if zone == 'Coworking':
         dx = vertcat(dT, u_blinds_E, u_blinds_N_val, u_blinds_S, u_blinds_W, u[4:], v)
     elif zone == 'Corridor':
@@ -170,21 +176,13 @@ def model(zone):
     elif zone == 'Stairway':
         dx = vertcat(dT, u_blinds_E_val, u_blinds_N, u_blinds_S, u_blinds_W, u[4:], v)
 
-
-    # dx = vertcat(dT,u,v)
     # Concatenate differential states, algebraic states, control inputs and right-hand-sides
     _x = x
-
     _z = vertcat([])
-
     _u = u
-
     _xdot = dx
-
     _zdot = vertcat([])
-
     _p = vertcat(alpha)
-
     _tv_p = vertcat(v, u_ahu_ub ,setp_ub, setp_lb, u_blinds_E_val, u_blinds_N_val, u_blinds_S_val, u_blinds_W_val)
     """
     --------------------------------------------------------------------------
@@ -192,6 +190,8 @@ def model(zone):
     --------------------------------------------------------------------------
     """
     # Initial condition for the states
+    # get the disturbances to set meaningful initial states and upper and lower
+    # bounds
     disturbances = NP.load('Neural_Network\disturbances.npy').squeeze()
     x0 = NP.array([18,0,0,0,0,0,18])
     # the first len(zones)-elements are all v_IG. After those weather information follows
@@ -202,7 +202,6 @@ def model(zone):
 
     disturbances_lb = NP.min(disturbances,axis =1)
     disturbances_ub = NP.max(disturbances,axis =1)
-
     x_lb = NP.concatenate((NP.array([x_lb_NN[0]]), NP.array([0,0,0,0,0,17]) - 1e-1, NP.array([disturbances_lb[zonenumber[zone]]]) ,disturbances_lb[len(zones_Heating):])) #- 1e-1
     x_ub = NP.concatenate((NP.array([x_ub_NN[0]]), NP.array([1,1,1,1,1,22]) + 1e-1, NP.array([disturbances_ub[zonenumber[zone]]]) ,disturbances_ub[len(zones_Heating):])) #+ 1e-1
     # No algebraic states
@@ -213,6 +212,7 @@ def model(zone):
     u_lb = NP.array([0,0,0,0,0,17])
     u_ub = NP.array([0,0,0,0,1,22])
 
+    # only four zones calculate the blind trajectories
     if zone == 'Coworking':
         u_ub[0] = 1
     elif zone == 'MeetingNorth':
@@ -232,9 +232,8 @@ def model(zone):
     x_scaling = NP.ones(x.shape[0])
     z_scaling = NP.array([])
     u_scaling = NP.array([1,1,1,1,1,1])
-    # Other possibly nonlinear constraints in the form cons(x,u,p) <= cons_ub
+
     # Define the expresion of the constraint (leave it empty if not necessary)
-    # cons = vertcat(x[0:len(zones)]-setp_ub, -(x[0:len(zones)]-setp_lb))
     cons = vertcat(x[0]-setp_ub, -(x[0]-setp_lb))
     # Define the lower and upper bounds of the constraint (leave it empty if not necessary)
     # cons_ub = NP.zeros(2*len(zones))
@@ -243,13 +242,7 @@ def model(zone):
     # Activate if the nonlinear constraints should be implemented as soft constraints
     soft_constraint = 1
     # Penalty term to add in the cost function for the constraints (it should be the same size as cons)
-    if zone == 'LabSouth':
-        penalty_term_cons = 5e5*NP.ones(2)
-    elif zone == 'Entrance':
-        penalty_term_cons = 5e5*NP.ones(2)
-    elif zone == 'RestroomM':
-        penalty_term_cons = 5e5*NP.ones(2)
-    elif zone == 'MeetingSouth':
+    if zone == 'LabSouth' or zone == zone == 'Entrance' or zone == 'RestroomM' or zone == 'MeetingSouth':
         penalty_term_cons = 5e5*NP.ones(2)
     else:
         penalty_term_cons = 2e5*NP.ones(2)
@@ -268,8 +261,7 @@ def model(zone):
     template_model: cost function
     --------------------------------------------------------------------------
     """
-    # Define the cost function
-    # Penalty term for the control movements 1e4, 100
+    # Define the cost functions
     if zone == 'MeetingNorth':
         lterm = 0.5*dHeatrate + 1*u_rad
         rterm = NP.concatenate((1e4*NP.ones(4), 1e4*NP.ones(1), 50*NP.ones(1)))
@@ -294,19 +286,15 @@ def model(zone):
     elif zone == 'Nerdroom2':
         lterm = 0.5*dHeatrate + 1*u_rad
         rterm = NP.concatenate((1e4*NP.ones(4), 1e4*NP.ones(1), 50*NP.ones(1)))
-
     elif zone == 'RestroomM':
         lterm = 4*u_rad + dHeatrate
         rterm = NP.concatenate((0*1e4*NP.ones(4), 0*1e4*NP.ones(1), 55*NP.ones(1)))
-
     elif zone == 'RestroomW':
         lterm = 0.01*dHeatrate + 1*u_rad
         rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 50*NP.ones(1)))
-
     elif zone == 'Stairway':
         lterm = 0.5*dHeatrate + 5*u_rad
         rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 25*NP.ones(1)))
-
     elif zone == 'Space01':
         lterm = 0.5*dHeatrate + 2*u_rad
         rterm = NP.concatenate((1e4*NP.ones(4), 1*1e4*NP.ones(1), 10*NP.ones(1)))

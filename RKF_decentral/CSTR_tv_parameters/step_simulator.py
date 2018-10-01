@@ -11,16 +11,16 @@ import pylab as P
 
 
 def step_simulator(model_fmu, simTime, secStep, configurations):
+    # 'conversion' for E+
     secStep = secStep*60
     simTime = simTime*60
-
+    # create empty u_mpc vector and temporary vector for the blinds
     u_mpc = NP.resize(NP.array([]),(len(configurations),6))
     tmp = NP.zeros(4)
     # Retrieve blind values from master zones
     for i in range(len(configurations)):
         # Allow only [0.1, 0.2,... 1.0] values for windows
         configurations[i].optimizer.u_mpc[4] = NP.floor(configurations[i].optimizer.u_mpc[4]*10)/10
-
         u_mpc[i,:] = configurations[i].optimizer.u_mpc
 
         if configurations[i].model.name == 'Coworking':
@@ -42,12 +42,13 @@ def step_simulator(model_fmu, simTime, secStep, configurations):
 
 
     ## DEBUG: set all unused_zones to 20 degree
+    # this is highly useful for tuning certain rooms and leave the unused_zones
+    # in some predefined ranges (they then not uncontrolled)
     # for u in unused_zones:
     #     model_fmu.set('u_rad_'+u, 20)
 
     for i in range(len(configurations)):
         # AHU
-        # u_mpc[i,4] = NP.floor(u_mpc[i,4]*10)/10
         model_fmu.set('u_AHU_' + zones[i], u_mpc[i,4])
         # Baseboard Heaters
         model_fmu.set('u_rad_' + zones[i], u_mpc[i,5])
@@ -55,12 +56,13 @@ def step_simulator(model_fmu, simTime, secStep, configurations):
     # do one step simulation
     res = model_fmu.do_step(current_t=simTime, step_size=secStep, new_step=True)
 
+    # get the used heat rate
     Heatrate = NP.zeros((len(configurations),1))
     for i in range(0, Heatrate.shape[0]):
         Heatrate[i,:] = model_fmu.get('Heatrate_' + zones[i])
         # Concatenate past Heatrate values with present ones
         configurations[i].simulator.Heatrate = NP.concatenate((configurations[i].simulator.Heatrate, NP.array([Heatrate[i,:]])), axis = 1)
-
+        # the window was opened while heat was delivered by Baseboard heaters
         if u_mpc[i,4] > 0 and Heatrate[i,:] > 0:
             configurations[i].simulator.faultDetector = NP.concatenate((configurations[i].simulator.faultDetector, NP.ones((1,1)) ), axis = 1)
         else:
@@ -80,6 +82,7 @@ def step_simulator(model_fmu, simTime, secStep, configurations):
         states = []
         states.append(model_fmu.get('T_' + zones[i]))
         blinds = [0,0,0,0]
+        # no need to get the sent u_mpc values (save some time)
         if zones[i] in eastSide:
             blinds[0] = int(tmp[0])
         if zones[i] in northSide:
@@ -88,17 +91,19 @@ def step_simulator(model_fmu, simTime, secStep, configurations):
             blinds[2] = int(tmp[2])
         if zones[i] in westSide:
             blinds[3] = int(tmp[3])
-
+        # append the blind values correctly to states list
         for k in range(0,len(blinds)): states.append(NP.asarray([blinds[k]]))
 
         states.append(NP.asarray([u_mpc[i,4]]))
         states.append(NP.asarray([u_mpc[i,5]]))
         states.append(model_fmu.get('v_IG_' + zones[i]))
+        # append the shared states
         for k in range(0,len(states_all)): states.append(states_all[k])
         states = NP.squeeze(states)
 
         # keep track of unmetHours
         diff = NP.zeros((1,1))
+        # get the right index for time-varying constraints
         step_index = int(configurations[i].simulator.t0_sim / configurations[i].simulator.t_step_simulator)
         if states[0] < configurations[i].optimizer.tv_p_values[step_index,-5,0]:
             diff = NP.resize(NP.abs(states[0] - configurations[i].optimizer.tv_p_values[step_index,-5,0]),(1,1))
@@ -119,6 +124,8 @@ def step_simulator(model_fmu, simTime, secStep, configurations):
         configurations[i].simulator.tf_sim = configurations[i].simulator.tf_sim + configurations[i].simulator.t_step_simulator
 
         # only for bounds error detection
+        # if a retrieved states is outside of x_lb or x_ub
+        # (which would lead to errors)
         tv_p_real = configurations[i].simulator.tv_p_real_now(configurations[i].simulator.t0_sim)
         rhs_unscaled = substitute(configurations[i].model.rhs, configurations[i].model.x, configurations[i].model.x * configurations[i].model.ocp.x_scaling)/configurations[i].model.ocp.x_scaling
         rhs_unscaled = substitute(rhs_unscaled, configurations[i].model.u, configurations[i].model.u * configurations[i].model.ocp.u_scaling)
@@ -130,7 +137,10 @@ def step_simulator(model_fmu, simTime, secStep, configurations):
         if (NP.squeeze(NP.asarray(x_next)) - x_lb < 0).all() or (x_ub - NP.squeeze(NP.asarray(x_next))  < 0).all():
             bp()
 
-
+"""
+Open loop simulation
+"""
+# define Baseboard heater trajectory
 def f_const(var):
     if var <= 0*100:
         return 17
@@ -152,7 +162,7 @@ def f_const(var):
         return 22
     else:
         return 20
-
+# define window trajectory
 def f_const_ahu(var):
     if var <= 0*100:
         return 0.6
@@ -178,6 +188,7 @@ def f_const_ahu(var):
 def compare(model_fmu, simTime, secStep, configurations):
     secStep = secStep*60
     simTime = simTime*60
+    # 10 days of open loop simulation (144 = 6*24)
     duration = 144*10
     sched = NP.zeros((duration,6))
 
@@ -188,13 +199,13 @@ def compare(model_fmu, simTime, secStep, configurations):
         for j in range(0,duration):
             u_mpc = configurations[i].optimizer.u_mpc
             u_mpc = NP.asarray(u_mpc, dtype=NP.float32)
-            u_mpc[5] = 16#float(f_const(j)) #np.round(np.random.normal(17,0.1,1),2)
-            u_mpc[1] = 0
+            u_mpc[-1] = float(f_const(j))
             tv_p_real = configurations[i].simulator.tv_p_real_now(configurations[i].simulator.t0_sim)
             rhs_unscaled = substitute(configurations[i].model.rhs, configurations[i].model.x, configurations[i].model.x * configurations[i].model.ocp.x_scaling)/configurations[i].model.ocp.x_scaling
             rhs_unscaled = substitute(rhs_unscaled, configurations[i].model.u, configurations[i].model.u * configurations[i].model.ocp.u_scaling)
             rhs_fcn = Function('rhs_fcn',[configurations[i].model.x,vertcat(configurations[i].model.u,configurations[i].model.tv_p)],[rhs_unscaled])
             x_next = rhs_fcn(configurations[i].simulator.x0_sim,vertcat(u_mpc,tv_p_real))
+
             configurations[i].simulator.xf_sim = NP.squeeze(NP.array(x_next))
             configurations[i].simulator.x0_sim = configurations[i].simulator.xf_sim
 
@@ -206,8 +217,7 @@ def compare(model_fmu, simTime, secStep, configurations):
     for j in range(0,duration):
         u_mpc = configurations[0].optimizer.u_mpc
         u_mpc = NP.asarray(u_mpc, dtype=NP.float32)
-        u_mpc[5] = 16#float(f_const(j)) #np.round(np.random.normal(17,0.1,1),2)
-        u_mpc[1] = 0
+        u_mpc[-1] = float(f_const(j))
         """
         Blinds
         """
@@ -301,7 +311,7 @@ def compare(model_fmu, simTime, secStep, configurations):
         P.plot(result_NN[:,15])
         P.plot(result_Ep[:,15])
 
-        P.show()
-
-
+        # P.show()
+        # bp()
+        NP.save('Simulation_Data\open_loop_'+zones[i]+'.npy', NP.concatenate((result_Ep, result_NN, sched),axis = 1))
         # P.savefig('fig_' + zone)

@@ -414,7 +414,7 @@ class configuration:
         self.simulator.u_AHU1_noERC = NP.concatenate((self.simulator.u_AHU1_noERC, u_AHU1_noERC), axis = 1)
 
 
-        self.simulator.window = NP.concatenate((self.simulator.window, tmp[1]*NP.ones((1,1))), axis = 1)
+        self.simulator.window = NP.concatenate((self.simulator.window, tmp[2]*NP.ones((1,1))), axis = 1)
         self.simulator.heatsetp = NP.concatenate((self.simulator.heatsetp, tmp[3]*NP.ones((1,1))), axis = 1)
         self.simulator.blindpos = NP.concatenate((self.simulator.blindpos, NP.resize(model_fmu.get('u_blinds_W_val'),(1,1))), axis = 1)
 
@@ -486,9 +486,6 @@ class configuration:
             diff = NP.resize(NP.abs(states[0] - self.optimizer.tv_p_values[step_index,-2,0]),(1,1))
         self.simulator.unmetHours = NP.concatenate((self.simulator.unmetHours, diff), axis = 1)
 
-
-
-
         # Update the initial condition for the next iteration
         self.simulator.x0_sim = self.simulator.xf_sim
         # Correction for sizes of arrays when dimension is 1
@@ -498,6 +495,55 @@ class configuration:
         self.simulator.mpc_iteration = self.simulator.mpc_iteration + 1
         self.simulator.t0_sim = self.simulator.tf_sim
         self.simulator.tf_sim = self.simulator.tf_sim + self.simulator.t_step_simulator
+
+
+
+
+    def compare(self, model_fmu, simTime, secStep):
+        lbub = NP.load('Neural_Network\lbub.npy')
+        x_lb_NN = lbub[0]
+        x_ub_NN = lbub[1]
+        y_lb_NN = lbub[2]
+        y_ub_NN = lbub[3]
+        secStep = secStep*60
+        simTime = simTime*60
+        duration = 144*10
+        result_BRCM = NP.zeros((duration,self.model.x.shape[0]))
+        result_Ep = NP.zeros((duration,self.model.x.shape[0]))
+        sched = NP.zeros((duration,4))
+
+        # Load a file with heatrate created in a E+ simulation with equivalent setpoints
+        # necessary since input is here in [W/m2]
+        heating = NP.load('Heatrate.npy')
+
+        for i in range(0,duration):
+            u_mpc = self.optimizer.u_mpc
+            u_mpc = NP.asarray(u_mpc, dtype=np.float32)
+            u_mpc[3] = heating[i]#float(self.f_const(i)) #np.round(np.random.normal(17,0.1,1),2)
+            tv_p_real = self.simulator.tv_p_real_now(self.simulator.t0_sim)
+            rhs_unscaled = substitute(self.model.rhs, self.model.x, self.model.x * self.model.ocp.x_scaling)/self.model.ocp.x_scaling
+            rhs_unscaled = substitute(rhs_unscaled, self.model.u, self.model.u * self.model.ocp.u_scaling)
+            rhs_fcn = Function('rhs_fcn',[self.model.x,vertcat(self.model.u,self.model.tv_p)],[rhs_unscaled])
+            x_next = rhs_fcn(self.simulator.x0_sim,vertcat(u_mpc,tv_p_real))
+            self.simulator.xf_sim = NP.squeeze(NP.array(x_next))
+            self.simulator.x0_sim = self.simulator.xf_sim
+
+            self.simulator.mpc_iteration = self.simulator.mpc_iteration + 1
+            self.simulator.t0_sim = self.simulator.tf_sim
+            self.simulator.tf_sim = self.simulator.tf_sim + self.simulator.t_step_simulator
+
+
+            result_BRCM[i,:] = self.simulator.xf_sim
+
+
+        NP.save('open_loop_BRCM.npy', result_BRCM)
+
+        P.subplot(1, 1, 1)
+        P.plot(result_BRCM[:,0], linewidth = 2.0)
+
+        P.ylabel('ZoneTemp')
+
+        P.show()
 
 
     def make_measurement(self):

@@ -10,20 +10,20 @@ from pdb import set_trace as bp
 import random
 import pylab as P
 
-# from casadi import *
-
-
-
 """
 ----------------------------------------
 Training Data Prep
 ----------------------------------------
 """
 
-data = NP.load('full.npy')
-load = 0
-save = 1
+load = 1
+save = 0
 trainsize = 1
+if load == 0:
+    data = NP.load('full.npy')
+else:
+    data = NP.load('Berlin.npy')
+
 
 # retrieve simulated variables from FMU.py
 # create training & test data
@@ -33,26 +33,31 @@ x_train = []
 y_train = []
 
 # not all zones have windows or radiators - # NOTE: Elevator is not controlled therefore not in zones list
-zones = ['Coworking', 'Corridor', 'Entrance', 'LabNorth', 'LabSouth', 'MeetingSouth', 'MeetingNorth']
+# NOTE: this list needs to be in the same order as specified in FMU.py
+zones = ['Coworking', 'Corridor', 'Entrance', 'LabNorth', 'LabSouth', 'MeetingSouth',
+'MeetingNorth', 'Nerdroom1', 'Nerdroom2', 'RestroomM', 'RestroomW',
+'Space01', 'Stairway']
 
 eastSide = ['Coworking', 'Space01', 'Stairway', 'RestroomW', 'Corridor']
 northSide = ['Coworking', 'MeetingNorth', 'LabNorth']
 southSide = ['Nerdroom2', 'Nerdroom1', 'MeetingSouth', 'LabSouth']
 westSide = ['LabSouth', 'Entrance', 'LabNorth']
 
-ind = 0
+# you may want to change the ind depending on which zone you want to train
+# e.g., for training zone 'Entrance' change to ind = 2*5
+ind = 0*5
 for zone in zones:
     vars()['Heatrate_' + zone] = data[0 + ind,:]/100
     vars()['T_' + zone] = data[1 + ind,:]
     vars()['SchedVal_' + zone] = data[2 + ind,:]
     if zone == 'RestroomM':
-        vars()['u_AHU_' + zone] = 0*data[3 + ind,:]
+        vars()['u_AHU_' + zone] = 1*data[3 + 10*5,:]
     else:
         vars()['u_AHU_' + zone] = data[3 + ind,:]
     vars()['u_AHU_' + zone][23] = 1e-3
     vars()['v_IG_' + zone] = data[4 + ind,:]
     ind += 5
-
+# make sure the ind is correct for zone independent data
 ind = 65
 v_Tamb = data[ind,:]
 
@@ -60,7 +65,6 @@ v_solGlobFac_E = data[ind+1,:]
 v_solGlobFac_N = data[ind+2,:]
 v_solGlobFac_S = data[ind+3,:]
 v_solGlobFac_W = data[ind+4,:]
-
 
 v_windspeed = data[ind+9,:]
 Hum_amb = data[ind+10,:]
@@ -75,6 +79,9 @@ for zone in zones:
     u_blinds_S = data[ind+7,:]
     u_blinds_W = data[ind+8,:]
 
+    # train networks with dummy features (this is a dirty workaround) so you
+    # dont have to care about the ANN input size in template_model - they all
+    # the same
     if zone not in eastSide:
         u_blinds_E = 0*data[ind+5,:]
         u_blinds_E[23] = 1e-3
@@ -95,8 +102,9 @@ for zone in zones:
     vars()['v_IG_'+zone], v_Tamb,
     v_solGlobFac_E, v_solGlobFac_N, v_solGlobFac_S, v_solGlobFac_W,
     v_windspeed, Hum_amb, P_amb])))
+    # define training and test data - these do not incorporate past data yet
     x_train = x[0:int(trainsize*len(x))]
-    x_test = x[int(0.8*len(x)):]
+    x_test = x[int(0.0*len(x)):]
     """
     -------
     x_train
@@ -107,7 +115,7 @@ for zone in zones:
     sample n            .   |     .          |     .              |     .
     """
     y_train = NP.transpose(NP.array([vars()['T_'+zone][numbers-1:trainsize*len(vars()['T_'+zone])], vars()['Heatrate_'+zone][numbers-1:trainsize*len(vars()['Heatrate_'+zone])]]))
-    y_test =  NP.transpose(NP.array([vars()['T_'+zone][int(0.8*len(vars()['T_'+zone])) + numbers-1:], vars()['Heatrate_'+zone][int(0.8 * len(vars()['Heatrate_'+zone])) + numbers-1:]]))
+    y_test =  NP.transpose(NP.array([vars()['T_'+zone][int(0.0*len(vars()['T_'+zone])) + numbers-1:], vars()['Heatrate_'+zone][int(0.0 * len(vars()['Heatrate_'+zone])) + numbers-1:]]))
 
     """
     Create past values
@@ -128,6 +136,7 @@ for zone in zones:
         tmp_test[i,:] = x_test[i:i+numbers,0:features].reshape(1,numbers*features)
 
     x_test = tmp_test[:]
+    # delete the current room temperature
     x_test = NP.delete(x_test, features*(numbers-1), 1)
 
     """
@@ -161,7 +170,8 @@ for zone in zones:
     x_test = NP.divide(x_test - x_lb, x_ub - x_lb)
     y_test = NP.divide(y_test - y_lb, y_ub - y_lb)
 
-    # past values are in same row - rows are shuffled here -> keeps current and past values together
+    # past values are in same row - rows are shuffled here -> keeps current and
+    # past values together
     NP.random.seed(1)
     NP.random.shuffle(x_train)
     NP.random.seed(1)
@@ -190,7 +200,7 @@ for zone in zones:
 
         for i in range(y_train.shape[1]):
             rmse[i] = NP.sqrt(mse[i])
-        print("RMSE: " + str(rmse))
+        print(zone + " RMSE: " + str(rmse[0]))
         P.subplot(2, 1, 1)
         P.plot(y_test[:,0])
         P.plot(classes[:,0])
@@ -200,7 +210,7 @@ for zone in zones:
 
         P.subplot(2, 1, 2)
         P.plot(vars()['u_AHU_' + zone])
-        P.show()
+        # P.show()
     else:
         """
         ----------------------------------------
@@ -223,7 +233,7 @@ for zone in zones:
         Model Training
         ----------------------------------------
         """
-        trained = model.fit(x_train, y_train, validation_split=0, shuffle = False, epochs=1500, batch_size=1024, verbose = 2)
+        trained = model.fit(x_train, y_train, validation_split=0, shuffle = False, epochs=500, batch_size=1024, verbose = 2)
         if save == 1:
             model_json = model.to_json()
             with open('Models\model_' + zone + '.json', 'w') as json_file:

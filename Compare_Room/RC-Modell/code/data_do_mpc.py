@@ -358,7 +358,6 @@ def save_simulation(configuration):
 
         mpc_tv_p = mpc_data.mpc_tv_p
         mpc_time = mpc_data.mpc_time
-        bp()
         NP.save('Simulation_Data\Data.npy', NP.concatenate((mpc_states, blindpos, window, heatsetp, mpc_tv_p, mpc_time, Heatrate, unmetHours),axis =1))
     else:
         # nothing to be done if no save is chosen

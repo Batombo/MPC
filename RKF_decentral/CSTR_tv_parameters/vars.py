@@ -1,17 +1,17 @@
-days = 1
+days = 10
 hours = 24
 minutes = 60
 seconds = 60
 EPTimeStep = 6 #Number of timesteps per hour in EnergyPlus
 
 numSteps = days*hours*EPTimeStep
-daystart =  86400*160/60
+daystart =  86400*0/60
 
-imagefile = 'test.pickle'
+imagefile = 'Simulation_Data\data.pickle'
 
 # not all zones have windows or radiators
 zones_Heating = ['Coworking', 'Corridor', 'Entrance', 'LabNorth', 'LabSouth', 'MeetingSouth', 'MeetingNorth', 'Nerdroom1', 'Nerdroom2', 'RestroomM', 'RestroomW', 'Space01', 'Stairway']
-# zones = ['RestroomM']#, 'MeetingSouth', 'Entrance', 'RestroomM']# 'Space01', 'Stairway']
+# this is first equal to all avaiable zones
 unused_zones = ['MeetingNorth', 'Coworking', 'MeetingSouth', 'Entrance', 'Corridor', 'LabNorth', 'LabSouth', 'Nerdroom1', 'Nerdroom2', 'RestroomM', 'RestroomW', 'Space01', 'Stairway']
 zones = ['MeetingNorth', 'Coworking', 'MeetingSouth', 'Entrance', 'Corridor', 'LabNorth', 'LabSouth', 'Nerdroom1', 'Nerdroom2', 'RestroomM', 'RestroomW', 'Space01', 'Stairway']
 

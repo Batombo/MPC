@@ -130,6 +130,7 @@ while (configurations[0].simulator.t0_sim + configurations[0].simulator.t_step_s
     tstep = configurations[0].simulator.t_step_simulator
     step_simulator(model_fmu, current_t, tstep, configurations)
 
+    # uncomment for open loop simulation
     # compare(model_fmu, current_t, tstep, configurations)
 
 
@@ -176,6 +177,7 @@ for i in range(len(configurations)):
 
     # Export to matlab if wanted
     data_do_mpc.export_to_matlab(configurations[i])
+    # save simulation data if wanted
     data_do_mpc.save_simulation(configurations[i])
 
 raw_input("Press Enter to exit do-mpc...")

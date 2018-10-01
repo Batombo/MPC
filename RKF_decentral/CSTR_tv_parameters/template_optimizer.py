@@ -28,12 +28,14 @@ from pdb import set_trace as bp
 from vars import *
 
 def createConstraints(model, ub_night, lb_night, ub_day, lb_day, dist_len):
+    # the overlap of temperature constraints may vary from zone to zone
     if model.name == 'Coworking':
         overlap = 8
     else:
         overlap = 10
     daycount = 0
     constraints = NP.zeros((3,dist_len))
+    # create thermal constraint and constraint for window during night
     for index in range (dist_len):
         if index != 0 and index % 144 == 0:
             daycount += 1
@@ -123,6 +125,10 @@ def optimizer(model, zonenumber):
     # Create a constraint vector - night constraints - day constraints
     constraints = createConstraints(model, 19,17,22,20, disturbances.shape[1])
     u_values = NP.zeros((4,disturbances.shape[1]))
+    # the disturbances vector contrains internal gains from all zones. Therfore
+    # subtract the number of zones and add 1 for only one internal gain
+    # also add the number of constraints, created above, as well as the number
+    # of blinds which are also tv_p
     n_tv_p = disturbances.shape[0] - len(zones_Heating) + 1 + constraints.shape[0] + u_values.shape[0]
 
     tv_p_values = NP.resize(NP.array([]),(number_steps,n_tv_p,n_horizon))

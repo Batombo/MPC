@@ -72,10 +72,10 @@ def radiation2shading(vsol, threshold):
     else:
         return 1
 #7
-for i in range(0,7):
+for i in range(0,1):
     # Load FMU created from compile_fmu() or EnergyPlusToFMU
     if i == 0:
-        modelName = 'RKF_Potsdam'
+        modelName = 'RKF_Berlin'
     elif i == 1:
         modelName = 'RKF_Chemnitz'
     elif i == 2:
@@ -132,7 +132,7 @@ for i in range(0,7):
     while simTime < timeStop:
         clock = simTime2Clock(sTime, days)
         if i == 0:
-            setp = f_const(clock,20,23)
+            setp = f_const(clock,17,20)
             model.set('u_rad_OfficesZ1',setp)
             model.set('u_AHU1_noERC', 0)
             model.set('u_blinds_N', 0)
@@ -230,7 +230,7 @@ for i in range(0,7):
     # P.xlabel('Time (days)')
     # P.show()
     model = None
-np.save('full.npy', [SchedVal, HeatRate, u_AHU1_noERC, ZoneTemp, v_Tamb, v_IG_Offices,
+np.save('test_data.npy', [SchedVal, HeatRate, u_AHU1_noERC, ZoneTemp, v_Tamb, v_IG_Offices,
 v_solGlobFac_E, v_solGlobFac_N, v_solGlobFac_S, v_solGlobFac_W,
 u_blinds_N, u_blinds_W,
 v_windspeed, Hum_amb, P_amb])

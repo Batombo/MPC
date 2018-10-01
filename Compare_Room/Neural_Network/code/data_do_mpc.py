@@ -29,6 +29,7 @@ from matplotlib.ticker import MaxNLocator
 import scipy.io
 import pdb
 from pdb import set_trace as bp
+import time
 
 import pickle as pl
 from vars import *
@@ -40,6 +41,7 @@ class mpc_data:
         nx = configuration.model.x.size(1)
         nu = configuration.model.u.size(1)
         np = configuration.model.p.size(1)
+        ntvp = configuration.model.tv_p.size(1)
         if NP.size(configuration.model.z) > 0: # If DAE
             nz = configuration.model.z.size(1)
         else: # Model is ODE
@@ -55,11 +57,13 @@ class mpc_data:
         self.mpc_ref = NP.resize(NP.array([]),(1, 1))
         self.mpc_cpu = NP.resize(NP.array([]),(1, 1))
         self.mpc_parameters = NP.resize(NP.array([]),(1, np))
+        self.mpc_tv_p =  NP.resize(NP.array([]),(1, ntvp))
         # Initialize with initial conditions
         self.mpc_states[0,:] = NP.asarray(configuration.model.ocp.x0 / configuration.model.ocp.x_scaling)[:,0]
 
         self.mpc_control[0,:] = configuration.model.ocp.u0 / configuration.model.ocp.u_scaling
-        self.mpc_time[0] = daystart#86400*150/60
+        self.mpc_tv_p[0,:] =  configuration.optimizer.tv_p_values[0,:,0]
+        self.mpc_time[0] = daystart
 
 class opt_result:
     """ A class for the definition of the result of an optimization problem containing optimal solution, optimal cost and value of the nonlinear constraints"""
@@ -93,6 +97,7 @@ def plot_mpc(configuration):
     mpc_data = configuration.mpc_data
     mpc_states = mpc_data.mpc_states
     mpc_control = mpc_data.mpc_control
+    mpc_tv_p = mpc_data.mpc_tv_p
     mpc_time = mpc_data.mpc_time
     index_mpc = configuration.simulator.mpc_iteration
     plot_states = configuration.simulator.plot_states
@@ -102,25 +107,31 @@ def plot_mpc(configuration):
     u = configuration.model.u
     u_scaling = configuration.model.ocp.u_scaling
 
-    HeatRate = NP.transpose(configuration.simulator.HeatRate)
+    Heatrate = NP.transpose(configuration.simulator.HeatRate)
     faultDetector = NP.transpose(configuration.simulator.faultDetector)
 
     plt.ion()
     fig = plt.figure(1)
+    # Clear the previous animation
+    plt.clf()
     total_subplots = len(plot_states) + len(plot_control) + 2
     # First plot the states
     for index in range(len(plot_states)):
     	plot = plt.subplot(total_subplots, 1, index + 1)
     	plt.plot(mpc_time[0:index_mpc], mpc_states[0:index_mpc,plot_states[index]] * x_scaling[plot_states[index]])
-    	plt.ylabel(str(x[plot_states[index]]))
+        if plot_states[index] == 0:
+            plt.ylabel('Temperature [$\degree$C]')
+        else:
+    	       plt.ylabel(str(x[plot_states[index]]))
     	plt.xlabel("Time")
     	plt.grid()
     	plot.yaxis.set_major_locator(MaxNLocator(4))
+        plt.title('Coworking')
 
     # Plot Heatrate
     plot = plt.subplot(total_subplots, 1, len(plot_states) + index + 1)
-    plt.plot(mpc_time[0:index_mpc], HeatRate[0:index_mpc,0])
-    plt.ylabel('HeatRate [W]')
+    plt.plot(mpc_time[0:index_mpc], Heatrate[0:index_mpc,0])
+    plt.ylabel('Heatrate [W]')
     plt.xlabel("Time")
     plt.grid()
     axes = plt.gca()
@@ -135,17 +146,26 @@ def plot_mpc(configuration):
     axes = plt.gca()
     axes.set_xlim([mpc_time[0]-5,mpc_time[-1]+10*10])
 
+
     # Plot the control inputs
     for index in range(len(plot_control)):
     	plot = plt.subplot(total_subplots, 1, len(plot_states) + index + 1 + 2)
     	plt.plot(mpc_time[0:index_mpc], mpc_control[0:index_mpc,plot_control[index]] * u_scaling[plot_control[index]] ,drawstyle='steps')
-    	plt.ylabel(str(u[plot_control[index]]))
+        if plot_control[index] <= 1:
+            plt.ylabel('Blind Position []')
+        elif plot_control[index] == 2:
+            plt.ylabel('Window Opening [%]')
+        elif plot_control[index] == 3:
+            plt.ylabel('Setpoint [$\degree$C]')
+        else:
+            plt.ylabel(str(u[plot_control[index]]))
     	plt.xlabel("Time")
     	plt.grid()
     	plot.yaxis.set_major_locator(MaxNLocator(4))
 
     # Save the plot
-    pl.dump(fig,file(imagefile,'wb'))
+    pl.dump(fig,file(name + '_' + imagefile,'wb'))
+    raw_input("Press Enter to continue...")
 
 def plot_state_pred(v,t0,el,lineop, n_scenarios, n_branches, nk, child_scenario, X_offset, x_scaling, t_step):
   # This function plots the prediction of a state
@@ -170,28 +190,28 @@ def plot_state_pred(v,t0,el,lineop, n_scenarios, n_branches, nk, child_scenario,
 
 def plot_control_pred(v,t0,el,lineop, n_scenarios, n_branches, nk, parent_scenario, U_offset, u_scaling, t_step, u_last_step):
 	# This function plots the prediction of a control input
-	plt.hold(True)
+    plt.hold(True)
 	# Time grid
-	tf = t_step * nk
-	tgrid = NP.linspace(t0,t0+tf,nk+1)
-	# For all control intervals
-	for k in range(nk):
-		# For all scenarios
-		for s in range(n_scenarios[k]):
-			# Time segment
-			t_beginning = tgrid[k]
-			t_end = tgrid[k+1]
+    tf = t_step * nk
+    tgrid = NP.linspace(t0,t0+tf,nk+1)
+    # For all control intervals
+    for k in range(nk):
+        # For all scenarios
+        for s in range(n_scenarios[k]):
+            # Time segment
+            t_beginning = tgrid[k]
+            t_end = tgrid[k+1]
 
-			# Plot state trajectory segment
-			u_this = v[el+U_offset[k][s]]*u_scaling[el]
-			plt.plot(NP.array([t_beginning,t_end]),NP.array([u_this,u_this]),lineop)
+            # Plot state trajectory segment
+            u_this = v[el+U_offset[k][s]]*u_scaling[el]
+            plt.plot(NP.array([t_beginning,t_end]),NP.array([u_this,u_this]),lineop)
 
 			# Plot vertical line connecting the scenarios
-			if k == 0:
-				u_prev = u_last_step
-			else:
-				u_prev = v[el+U_offset[k-1][parent_scenario[k][s]]]*u_scaling[el]
-			plt.plot(NP.array([t_beginning,t_beginning]),NP.array([u_prev,u_this]),lineop)
+            if k == 0:
+                u_prev = u_last_step
+            else:
+                u_prev = v[el+U_offset[k-1][parent_scenario[k][s]]]*u_scaling[el]
+            plt.plot(NP.array([t_beginning,t_beginning]),NP.array([u_prev,u_this]),lineop)
 
 
 
@@ -201,6 +221,7 @@ def plot_animation(configuration):
         mpc_data = configuration.mpc_data
         mpc_states = mpc_data.mpc_states
         mpc_control = mpc_data.mpc_control
+        mpc_tv_p = mpc_data.mpc_tv_p
         mpc_time = mpc_data.mpc_time
         index_mpc = configuration.simulator.mpc_iteration
         plot_states = configuration.simulator.plot_states
@@ -220,11 +241,11 @@ def plot_animation(configuration):
         t_step = configuration.simulator.t_step_simulator
         v_opt = configuration.optimizer.opt_result_step.optimal_solution
 
-
-        HeatRate = NP.transpose(configuration.simulator.HeatRate)
+        Heatrate = NP.transpose(configuration.simulator.HeatRate)
+        unmetHours = NP.transpose(configuration.simulator.unmetHours)
 
         plt.ion()
-        total_subplots = len(plot_states) + len(plot_control) + 1
+        total_subplots = len(plot_states) + len(plot_control) + 1 + 1
         plt.figure(2)
         # Clear the previous animation
         plt.clf()
@@ -234,27 +255,49 @@ def plot_animation(configuration):
 	        # First plot the prediction
             plot_state_pred(v_opt, t0, plot_states[index], '-b', n_scenarios, n_branches, nk, child_scenario, X_offset, x_scaling, t_step)
             plt.plot(mpc_time[0:index_mpc], mpc_states[0:index_mpc,plot_states[index]] * x_scaling[plot_states[index]], '-k', linewidth=2.0)
-            plt.ylabel(str(x[plot_states[index]]))
+            if plot_states[index] == 0:
+                plt.ylabel('Temperature [$\degree$C]')
+            else:
+                plt.ylabel(str(x[plot_states[index]]))
             plt.xlabel("Time")
             plt.grid()
             plot.yaxis.set_major_locator(MaxNLocator(4))
+            plt.title('Coworking')
 
         # Plot Heatrate
         plot = plt.subplot(total_subplots, 1, len(plot_states) + index + 1)
-        plt.plot(mpc_time[0:index_mpc], HeatRate[0:index_mpc,0],'-k', linewidth=2.0)
-        plt.ylabel('HeatRate [W]')
+        plt.plot(mpc_time[0:index_mpc], Heatrate[0:index_mpc,0],'-k', linewidth=2.0)
+        plt.ylabel('Heatrate [W]')
         plt.xlabel("Time")
         plt.grid()
         axes = plt.gca()
         axes.set_xlim([mpc_time[0]-5,mpc_time[-1]+10*10])
-        # bp()
+
+        # Plot Heatrate
+        plot = plt.subplot(total_subplots, 1, len(plot_states) + index + 1 + 1)
+        plt.plot(mpc_time[0:index_mpc], unmetHours[0:index_mpc,0],'-k', linewidth=2.0)
+        plt.ylabel('unmetHours []')
+        plt.xlabel("Time")
+        plt.grid()
+        axes = plt.gca()
+        axes.set_xlim([mpc_time[0]-5,mpc_time[-1]+10*10])
+
+
+
         # Plot the control inputs
         for index in range(len(plot_control)):
-            plot = plt.subplot(total_subplots, 1, len(plot_states) + index + 1 +1)
+            plot = plt.subplot(total_subplots, 1, len(plot_states) + 1  + index + 1 + 1)
         	# First plot the prediction
             plot_control_pred(v_opt, t0, plot_control[index], '-b', n_scenarios, n_branches, nk, parent_scenario, U_offset, u_scaling, t_step, mpc_control[index_mpc-1,plot_control[index]])
             plt.plot(mpc_time[0:index_mpc], mpc_control[0:index_mpc,plot_control[index]] * u_scaling[plot_control[index]],'-k' ,drawstyle='steps', linewidth=2.0)
-            plt.ylabel(str(u[plot_control[index]]))
+            if plot_control[index] <= 1:
+                plt.ylabel('Blind Position []')
+            elif plot_control[index] == 2:
+                plt.ylabel('Window Opening [%]')
+            elif plot_control[index] == 3:
+                plt.ylabel('Setpoint [$\degree$C]')
+            else:
+                plt.ylabel(str(u[plot_control[index]]))
             plt.xlabel("Time")
             plt.grid()
             plot.yaxis.set_major_locator(MaxNLocator(4))
@@ -262,4 +305,21 @@ def plot_animation(configuration):
 
     else:
         # nothing to be done if no animation is chosen
+        pass
+
+def save_simulation(configuration):
+    if configuration.simulator.save_simulation:
+
+        mpc_data = configuration.mpc_data
+        mpc_states = mpc_data.mpc_states
+        mpc_control = mpc_data.mpc_control
+        mpc_tv_p = mpc_data.mpc_tv_p
+        mpc_time = mpc_data.mpc_time
+
+        Heatrate = NP.transpose(configuration.simulator.HeatRate)
+        unmetHours = NP.transpose(configuration.simulator.unmetHours)
+
+        NP.save('Simulation_Data\Data.npy', NP.concatenate((mpc_states, mpc_control, mpc_tv_p, mpc_time, Heatrate, unmetHours),axis =1))
+    else:
+        # nothing to be done if no save is chosen
         pass
